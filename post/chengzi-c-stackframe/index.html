@@ -1,0 +1,430 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="all,follow">
+<meta name="googlebot" content="index,follow,snippet,archive">
+<title>【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？ | chengzi &#39;Blog</title>
+<link rel="shortcut icon" href="https://taylor516.github.io//favicon.ico?v=1677760836462">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+<link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" type='text/css' media='all'>
+
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/moment.js/2.23.0/moment.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+
+
+
+</head>
+<body class="home blog ct-body standard">
+<div id="overflow-container" class="overflow-container">
+  <a class="skip-content" href="#main">Skip to content</a>
+  <header id="site-header" class="site-header" role="banner">
+    <div class='top-navigation top-navigation-important'>
+        <div class='container'>
+            <div id="menu-secondary" class="menu-container menu-secondary" role="navigation">
+                <button id="toggle-secondary-navigation" class="toggle-secondary-navigation"><i class="fa fa-plus"></i></button>
+                <div class="menu">
+                    <ul id="menu-secondary-items" class="menu-secondary-items">
+                        
+                        
+                            
+                        <li id="menu-item" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item">
+                            <a href="https://taylor516.github.io/tag/fSM4VPbJS/">c语言</a>
+                        </li>
+                            
+                        
+                            
+                        <li id="menu-item" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item">
+                            <a href="https://taylor516.github.io/tag/IcsvciiNo/">栈帧</a>
+                        </li>
+                            
+                        
+                            
+                        <li id="menu-item" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item">
+                            <a href="https://taylor516.github.io/tag/kYbRdlXfi/">指针</a>
+                        </li>
+                            
+                        
+                            
+                        <li id="menu-item" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item">
+                            <a href="https://taylor516.github.io/tag/eJP-l74WC/">java</a>
+                        </li>
+                            
+                        
+                            
+                        <li id="menu-item" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item">
+                            <a href="https://taylor516.github.io/tag/j47udv-St/">面向对象</a>
+                        </li>
+                            
+                        
+                    </ul>
+                </div>
+            </div>
+            <ul class="social-media-icons">
+                
+                    
+                        <li>
+                            <a href="https://github.com/chengzi516" data-animate-hover="pulse" class="github" target="_blank">
+                                <i class="fab fa-github" title="github"></i>
+                                <span class="screen-reader-text">github</span>
+                            </a>
+                        </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                        <li>
+                            <a href="mailto: p772307283@outlook.com" data-animate-hover="pulse" class="envelope" target="_blank">
+                                <i class="fa fa-envelope" title="envelope"></i>
+                                <span class="screen-reader-text">envelope</span>
+                            </a>
+                        </li>
+                    
+                
+                    
+                        <li>
+                            <a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes" data-animate-hover="pulse" class="qq" target="_blank">
+                                <i class="fab fa-qq" title="qq"></i>
+                                <span class="screen-reader-text">qq</span>
+                            </a>
+                        </li>
+                    
+                
+                    
+                
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="title-info" class="title-info">
+            <div id='site-title' class='site-title'>
+                <a href="https://taylor516.github.io/">  chengzi &#39;Blog </a>
+            </div>
+        </div>
+        <button id="toggle-navigation" class="toggle-navigation">
+            <i class="fa fa-bars"></i>
+        </button>
+        <div id="menu-primary-tracks" class="menu-primary-tracks"></div>
+        <div id="menu-primary" class="menu-container menu-primary" role="navigation">
+            <p class="site-description">一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+            <div class="menu">
+                <ul id="menu-primary-items" class="menu-primary-items">
+                     
+                        
+                            <li id="menu-item" class='menu-item menu-item-type-post_type menu-item-object-page current-menu-item current_page_item'>
+                                <a href="/">首页</a>
+                            </li>
+                        
+                    
+                        
+                            <li id="menu-item" class='menu-item menu-item-type-post_type menu-item-object-page current-menu-item current_page_item'>
+                                <a href="/archives">归档</a>
+                            </li>
+                        
+                    
+                        
+                            <li id="menu-item" class='menu-item menu-item-type-post_type menu-item-object-page current-menu-item current_page_item'>
+                                <a href="/tags">标签</a>
+                            </li>
+                        
+                    
+                        
+                            <li id="menu-item" class='menu-item menu-item-type-post_type menu-item-object-page current-menu-item current_page_item'>
+                                <a href="/post/about">关于</a>
+                            </li>
+                        
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+</header>
+
+
+  <div id="main" class="main" role="main">
+    <div id="loop-container" class="loop-container">
+      <div class="post type-post status-publish format-standard has-post-thumbnail hentry category-design tag-design tag-standard-2 tag-tagalicious tag-travel entry full-without-featured odd excerpt-1">
+        
+          <div class='featured-image lazy lazy-bg-image' data-background="https://s2.loli.net/2023/02/01/6GMye7fOU2iXwv9.jpg">
+          </div>
+        
+
+        <div class="entry-meta">
+          <span class="date">· 2023-03-01 ·</span> <span> / </span>
+          <span class="author">
+            <a href="https://taylor516.github.io/" title="" rel="author"> 欸？藏在这里都能被你发现嘛·····</a>
+          </span>
+          
+            <span class="category">
+                    <span> / </span>
+                    <a href="https://taylor516.github.io/tag/fSM4VPbJS/">c语言</a>
+                </span>
+          
+            <span class="category">
+                    <span> / </span>
+                    <a href="https://taylor516.github.io/tag/IcsvciiNo/">栈帧</a>
+                </span>
+          
+        </div>
+        <div class='entry-header'>
+          <h1 class='entry-title'>【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？</h1>
+        </div>
+        <div class="entry-container">
+          <div class="entry-content">
+            <article>
+              <blockquote>
+<p>前言：🎅想必在学习c的过程中，你可能产生过这样的疑惑，为什么在进行传参时总是会选择传入一个<code>指针</code>呢😟？例如你想完成一个add函数，其功能实现为c=a+b，但是在<code>返回值为void</code>的情况下传入a，b两个参数却<code>改变不了c</code>。也许老师给你解释的是<code>形参是实参的拷贝</code>,但你却不是很理解，也许你还遇到过这样的问题：1.局部变量是<code>如何创建</code>的？为何局部变量不初始化会出现<code>随机值</code>？2.在函数调用时<code>参数如何传递</code>？又以何种<code>方式</code>传递？3.函数返回值是如何<code>带回主函数</code>？那么就接着往下看吧。😜</p>
+</blockquote>
+<p>🌈tip：因为不同的编译器带来的反编译效果不同，所以当你们进行测试时会与文章展示有所差异，但不影响理解。推荐vs2013，对整个栈帧创建和销毁的过程展示的更加全面。接下来就以一份以vs2013为平台进行编译的代码进行分析。</p>
+<h1 id="准备">🚗准备</h1>
+<h2 id="栈与栈帧">🚎栈与栈帧</h2>
+<p>栈在数据结构这一课也算是一个典型的例子，有着<code>先进后出</code>的明显特点。栈被当作一种特殊的容器，数据可以被压入栈（push），也可以将压入的数据弹出（pop）。<br>
+在经典的操作系统中，栈总是<code>向下增长（由高地址向低地址）</code>的。<br>
+栈可以认为是CPU寄存器里的<code>某个指针</code>所指向的一片<code>内存区域</code>。在我们常见的i386或者x86-64下，栈顶由被称为 esp 的寄存器（也就是才提到的某个指针）进行定位的。<br>
+<img src="https://th.bing.com/th/id/R.72a4e2235288509e9d67503301f22273?rik=9Hs03RmADC9VBQ&pid=ImgRaw&r=0"><br>
+而栈帧则是被叫做<code>过程活动记录</code>，是编译器用来<code>实现过程/函数调用</code>的一种数据结构。栈帧就是利用EBP寄存器访问局部变量、参数、函数返回地址等的手段。<br>
+总而言之：</p>
+<ol>
+<li>每一次<code>函数调用</code>，都要为本次函数调用<code>开辟空间</code>，就是函数<code>栈帧</code>的空间。</li>
+<li>这块空间的维护是使用了2个寄存器： esp 和 ebp ， ebp 记录的是<code>栈底</code>的地址， esp 记录的是<code>栈顶</code>的地址。</li>
+<li>ebp寄存器又被称为帧指针（Frame Pointer），esp寄存器又被称为栈指针（Stack Pointer）。</li>
+</ol>
+<h2 id="寄存器与汇编指令">🚄寄存器与汇编指令</h2>
+<p>以下是后文会用到所以需要了解的知识点。</p>
+<blockquote>
+<p>相关寄存器<br>
+eax：通用寄存器，保留临时数据，常用于返回值<br>
+ebx：通用寄存器，保留临时数据<br>
+ebp：栈底寄存器<br>
+esp：栈顶寄存器<br>
+eip：指令寄存器，保存当前指令的下一条指令的地址</p>
+</blockquote>
+<blockquote>
+<p>相关汇编命令<br>
+mov：数据转移指令<br>
+push：数据入栈，同时esp栈顶寄存器也要发生改变<br>
+pop：数据弹出至指定位置，同时esp栈顶寄存器也要发生改变<br>
+sub：减法命令<br>
+add：加法命令<br>
+call：函数调用，1. 压入返回地址 2. 转入目标函数<br>
+jump：通过修改eip，转入目标函数，进行调用<br>
+ret：恢复返回地址，压入eip，类似pop eip命令</p>
+</blockquote>
+<h1 id="正文开始">🚖正文开始</h1>
+<h2 id="代码示例">🚞代码示例</h2>
+<p>就以简单的add函数来梳理栈帧吧。</p>
+<pre><code class="language-c">int add(int x, int y)
+{
+	int z = 0;
+	z = x + y;
+	return z;
+}
+int main()
+{
+	int a = 3;
+	int b = 5;
+	int ret = 0;
+	ret = add(a, b);
+	printf(&quot;%d&quot;, ret);
+	return 0;
+}
+</code></pre>
+<p>在vs中启动调试，找到<code>调用堆栈</code>的选项。<br>
+<img src="https://imgbed.link/file/17390"><br>
+可以发现，在vs对main函数进行调用前，就已经调用了很多其他的函数了，例如invoke_main。<br>
+<img src="https://imgbed.link/file/17392"><br>
+那么就可以得知，不仅是我们所看到的main或者add，还有许多被调用的函数例如invoke_main，都有<code>自己的栈帧</code>，并且可以通过ebp，esp等指针来对自己的栈帧进行一个维护。<br>
+那么鼠标右击转到<code>反汇编</code>，就可以开始了解栈帧的维护过程了。</p>
+<h2 id="️main的栈帧">✈️main的栈帧</h2>
+<p>我们就从main函数开始讲解。<br>
+这里是vs2022开启反汇编后的截图。<br>
+<img src="https://imgbed.link/file/17393"><br>
+<code>但后续展示的代码来自vs2013</code>，因为2013对此过程的展示更加的清晰明了。</p>
+<h3 id="栈帧的建立">🚀栈帧的建立</h3>
+<pre><code>//函数栈帧的创建
+00BE1820 push ebp
+00BE1821 mov ebp,esp
+00BE1823 sub esp,0E4h
+00BE1829 push ebx
+00BE182A push esi
+00BE182B push edi
+00BE182C lea edi,[ebp-24h]
+00BE182F mov ecx,9
+00BE1834 mov eax,0CCCCCCCCh
+00BE1839 rep stos dword ptr es:[edi]
+</code></pre>
+<p>第一行，push ebp代表着将ebp寄存器的值进行<code>压栈</code>，并且在此时，ebp中存放的是invoke main函数栈帧的ebp(在调用main前需要调用invoke_main）。<br>
+<img src="https://imgbed.link/file/17394"><br>
+第二行，move指令的意思就是将esp的值存到ebp中。这个步骤就是产生了main函数的ebp，这个值也正好是invoke main的esp。<br>
+第三行，给esp地址进行了一个减法，进而产生了新的esp。注意，地址是<code>由低到高</code>的。</p>
+
+            </article>
+          </div>
+          <div class='entry-meta-bottom'>
+            <div class="entry-categories">
+              <p>
+                <span>Categories</span>
+                
+                  
+                    
+                  <a href="https://taylor516.github.io/tag/fSM4VPbJS/" title="View all posts in c语言">c语言</a>
+                    
+                    
+                    
+                  <a href="https://taylor516.github.io/tag/IcsvciiNo/" title="View all posts in 栈帧">栈帧</a>
+                    
+                    
+                    
+                  <a href="https://taylor516.github.io/tag/kYbRdlXfi/" title="View all posts in 指针">指针</a>
+                    
+                    
+                    
+                  <a href="https://taylor516.github.io/tag/eJP-l74WC/" title="View all posts in java">java</a>
+                    
+                    
+                    
+                  <a href="https://taylor516.github.io/tag/j47udv-St/" title="View all posts in 面向对象">面向对象</a>
+                    
+                    
+              </p>
+            </div>
+            <div class="entry-tags">
+              <p><span>Tags</span>
+              </p>
+            </div>
+          </div>
+          <div class="author-meta">
+            <div class="author">
+              <img alt='' src="https://taylor516.github.io//images/avatar.png?v=1677760836462" class='avatar avatar-72 photo' height='72' width='72'>
+              <span>WRITTEN BY: &nbsp;&nbsp;&nbsp;<a href='https://taylor516.github.io/'>chengzi</a> </span>
+            </div>
+            <div class="bio">
+              <p>一个大学牲</p>
+              
+                
+                  <a class="github" target="_blank"
+                     href="https://github.com/chengzi516">
+                    <i class="fab fa-github" title="github"></i>
+                  </a>
+                
+              
+                
+              
+                
+              
+                
+              
+                
+              
+                
+                  <a class="envelope" target="_blank"
+                     href="mailto: p772307283@outlook.com">
+                    <i class="fa fa-envelope" title="envelope"></i>
+                  </a>
+                
+              
+                
+                  <a class="qq" target="_blank"
+                     href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes">
+                    <i class="fab fa-qq" title="qq"></i>
+                  </a>
+                
+              
+                
+              
+            </div>
+          </div>
+        </div>
+          
+            <nav class="navigation pagination" role="navigation">
+              <h2 class="screen-reader-text">Posts navigation</h2>
+              <div class="nav-links">
+                <a class="next page-numbers" href="https://taylor516.github.io/post/chengzi-c-pointer/">下一篇->【c】关于指针，你应该知道这些</a>
+              </div>
+            </nav>
+          
+      </div>
+      <section id="comments" class="comments">
+        
+      </section>
+    </div>
+  </div>
+  <footer id="site-footer" class="site-footer" role="contentinfo">
+    <h1>
+        <a href="https://taylor516.github.io/"> chengzi &#39;Blog </a>
+    </h1>
+    <p class="site-description">一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+    <div id="menu-footer" class="menu-container menu-footer" role="navigation">
+        <div class="menu">
+            <ul id="menu-footer-items" class="menu-footer-items">
+            </ul>
+        </div>
+    </div>
+    <ul class="social-media-icons">
+        
+            
+                <li>
+                    <a href="https://github.com/chengzi516" data-animate-hover="pulse" class="github" target="_blank">
+                        <i class="fab fa-github" title="github"></i>
+                        <span class="screen-reader-text">github</span>
+                    </a>
+                </li>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+                <li>
+                    <a href="mailto: p772307283@outlook.com" data-animate-hover="pulse" class="envelope" target="_blank">
+                        <i class="fas fa-envelope" title="envelope"></i>
+                        <span class="screen-reader-text">envelope</span>
+                    </a>
+                </li>
+            
+        
+            
+                <li>
+                    <a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes" data-animate-hover="pulse" class="qq" target="_blank">
+                        <i class="fab fa-qq" title="qq"></i>
+                        <span class="screen-reader-text">qq</span>
+                    </a>
+                </li>
+            
+        
+            
+        
+    </ul>
+    <div class="design-credit">
+        <p>欸？藏在这里都能被你发现嘛·····</p>
+    </div>
+</footer>
+<script>
+    hljs.initHighlightingOnLoad()
+</script>
+<script src="https://taylor516.github.io//media/scripts/lib/jquery.min.js"></script>
+<script src="https://taylor516.github.io//media/scripts/lib/jquerymigrate.js"></script>
+<script src="https://taylor516.github.io//media/scripts/lib/production.min.js"></script>
+
+</div>
+</body>
+</html>
+

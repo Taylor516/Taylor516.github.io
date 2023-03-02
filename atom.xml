@@ -1,0 +1,1203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://taylor516.github.io/</id>
+    <title>chengzi &apos;Blog</title>
+    <updated>2023-03-02T12:40:39.764Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://taylor516.github.io/"/>
+    <link rel="self" href="https://taylor516.github.io/atom.xml"/>
+    <subtitle>一个程序员能造成多大的impact，取决于他的代码影响力。</subtitle>
+    <logo>https://taylor516.github.io/images/avatar.png</logo>
+    <icon>https://taylor516.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2023, chengzi &apos;Blog</rights>
+    <entry>
+        <title type="html"><![CDATA[【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？]]></title>
+        <id>https://taylor516.github.io/post/chengzi-c-stackframe/</id>
+        <link href="https://taylor516.github.io/post/chengzi-c-stackframe/">
+        </link>
+        <updated>2023-03-01T12:25:20.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<p>前言：🎅想必在学习c的过程中，你可能产生过这样的疑惑，为什么在进行传参时总是会选择传入一个<code>指针</code>呢😟？例如你想完成一个add函数，其功能实现为c=a+b，但是在<code>返回值为void</code>的情况下传入a，b两个参数却<code>改变不了c</code>。也许老师给你解释的是<code>形参是实参的拷贝</code>,但你却不是很理解，也许你还遇到过这样的问题：1.局部变量是<code>如何创建</code>的？为何局部变量不初始化会出现<code>随机值</code>？2.在函数调用时<code>参数如何传递</code>？又以何种<code>方式</code>传递？3.函数返回值是如何<code>带回主函数</code>？那么就接着往下看吧。😜</p>
+</blockquote>
+<p>🌈tip：因为不同的编译器带来的反编译效果不同，所以当你们进行测试时会与文章展示有所差异，但不影响理解。推荐vs2013，对整个栈帧创建和销毁的过程展示的更加全面。接下来就以一份以vs2013为平台进行编译的代码进行分析。</p>
+<h1 id="准备">🚗准备</h1>
+<h2 id="栈与栈帧">🚎栈与栈帧</h2>
+<p>栈在数据结构这一课也算是一个典型的例子，有着<code>先进后出</code>的明显特点。栈被当作一种特殊的容器，数据可以被压入栈（push），也可以将压入的数据弹出（pop）。<br>
+在经典的操作系统中，栈总是<code>向下增长（由高地址向低地址）</code>的。<br>
+栈可以认为是CPU寄存器里的<code>某个指针</code>所指向的一片<code>内存区域</code>。在我们常见的i386或者x86-64下，栈顶由被称为 esp 的寄存器（也就是才提到的某个指针）进行定位的。<br>
+<img src="https://th.bing.com/th/id/R.72a4e2235288509e9d67503301f22273?rik=9Hs03RmADC9VBQ&pid=ImgRaw&r=0"><br>
+而栈帧则是被叫做<code>过程活动记录</code>，是编译器用来<code>实现过程/函数调用</code>的一种数据结构。栈帧就是利用EBP寄存器访问局部变量、参数、函数返回地址等的手段。<br>
+总而言之：</p>
+<ol>
+<li>每一次<code>函数调用</code>，都要为本次函数调用<code>开辟空间</code>，就是函数<code>栈帧</code>的空间。</li>
+<li>这块空间的维护是使用了2个寄存器： esp 和 ebp ， ebp 记录的是<code>栈底</code>的地址， esp 记录的是<code>栈顶</code>的地址。</li>
+<li>ebp寄存器又被称为帧指针（Frame Pointer），esp寄存器又被称为栈指针（Stack Pointer）。</li>
+</ol>
+<h2 id="寄存器与汇编指令">🚄寄存器与汇编指令</h2>
+<p>以下是后文会用到所以需要了解的知识点。</p>
+<blockquote>
+<p>相关寄存器<br>
+eax：通用寄存器，保留临时数据，常用于返回值<br>
+ebx：通用寄存器，保留临时数据<br>
+ebp：栈底寄存器<br>
+esp：栈顶寄存器<br>
+eip：指令寄存器，保存当前指令的下一条指令的地址</p>
+</blockquote>
+<blockquote>
+<p>相关汇编命令<br>
+mov：数据转移指令<br>
+push：数据入栈，同时esp栈顶寄存器也要发生改变<br>
+pop：数据弹出至指定位置，同时esp栈顶寄存器也要发生改变<br>
+sub：减法命令<br>
+add：加法命令<br>
+call：函数调用，1. 压入返回地址 2. 转入目标函数<br>
+jump：通过修改eip，转入目标函数，进行调用<br>
+ret：恢复返回地址，压入eip，类似pop eip命令</p>
+</blockquote>
+<h1 id="正文开始">🚖正文开始</h1>
+<h2 id="代码示例">🚞代码示例</h2>
+<p>就以简单的add函数来梳理栈帧吧。</p>
+<pre><code class="language-c">int add(int x, int y)
+{
+	int z = 0;
+	z = x + y;
+	return z;
+}
+int main()
+{
+	int a = 3;
+	int b = 5;
+	int ret = 0;
+	ret = add(a, b);
+	printf(&quot;%d&quot;, ret);
+	return 0;
+}
+</code></pre>
+<p>在vs中启动调试，找到<code>调用堆栈</code>的选项。<br>
+<img src="https://imgbed.link/file/17390"><br>
+可以发现，在vs对main函数进行调用前，就已经调用了很多其他的函数了，例如invoke_main。<br>
+<img src="https://imgbed.link/file/17392"><br>
+那么就可以得知，不仅是我们所看到的main或者add，还有许多被调用的函数例如invoke_main，都有<code>自己的栈帧</code>，并且可以通过ebp，esp等指针来对自己的栈帧进行一个维护。<br>
+那么鼠标右击转到<code>反汇编</code>，就可以开始了解栈帧的维护过程了。</p>
+<h2 id="️main的栈帧">✈️main的栈帧</h2>
+<p>我们就从main函数开始讲解。<br>
+这里是vs2022开启反汇编后的截图。<br>
+<img src="https://imgbed.link/file/17393"><br>
+<code>但后续展示的代码来自vs2013</code>，因为2013对此过程的展示更加的清晰明了。</p>
+<h3 id="栈帧的建立">🚀栈帧的建立</h3>
+<pre><code>//函数栈帧的创建
+00BE1820 push ebp
+00BE1821 mov ebp,esp
+00BE1823 sub esp,0E4h
+00BE1829 push ebx
+00BE182A push esi
+00BE182B push edi
+00BE182C lea edi,[ebp-24h]
+00BE182F mov ecx,9
+00BE1834 mov eax,0CCCCCCCCh
+00BE1839 rep stos dword ptr es:[edi]
+</code></pre>
+<p>第一行，push ebp代表着将ebp寄存器的值进行<code>压栈</code>，并且在此时，ebp中存放的是invoke main函数栈帧的ebp(在调用main前需要调用invoke_main）。<br>
+<img src="https://imgbed.link/file/17394"><br>
+第二行，move指令的意思就是将esp的值存到ebp中。这个步骤就是产生了main函数的ebp，这个值也正好是invoke main的esp。<br>
+第三行，给esp地址进行了一个减法，进而产生了新的esp。注意，地址是<code>由低到高</code>的。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【c】关于指针，你应该知道这些]]></title>
+        <id>https://taylor516.github.io/post/chengzi-c-pointer/</id>
+        <link href="https://taylor516.github.io/post/chengzi-c-pointer/">
+        </link>
+        <updated>2023-03-01T11:59:25.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="引入">引入</h1>
+<p>指针，其实是指针变量，只是口头上我们将其口语化为指针，真实的指针其实指的是<code>地址</code>。指针变量，是用来<code>存放地址</code>的，而地址呢，则是起到可以唯一的<code>标识一块空间</code>的作用。<br>
+指针的大小并不受其类型的控制，而是受到了平台的限制。在32位平台，指针的大小为4字节，在64位平台，指针的大小就是8字节。那他的类型有什么作用呢？答案是决定<code>走的步长</code>。在很多时候，我们都会利用指针这个特性，去取到一些我们需要的数值。例如在int型的空间里，我们可以使用char型的指针去取其中的某个字节。<br>
+指针，是c语言中堪称核心的一环，也是c语言的灵魂。但指针并非是什么困难高深的东西，指针只是一扇门，当你推开它时，你才能发现整个世界。</p>
+<h1 id="各种指针">各种指针</h1>
+<h2 id="字符型指针">字符型指针</h2>
+<p>字符型指针的类型是char*，应该都已经很熟悉了。例如一个简单的例子：</p>
+<pre><code class="language-c">char a='a';
+char* p =&amp;a;
+</code></pre>
+<p>*代表了p是一个<code>指针</code>,char则表示指针指向的类型。&amp;则是取到了a的地址。<br>
+指针也可以直接指向一个常量字符串，例如</p>
+<pre><code class="language-c">char* p=&quot;chengzi&quot;;
+</code></pre>
+<p>此时的p更具体的来说，是指向了这个字符串的<code>第一个字符---c</code>。同时需要注意的是，由于此时指向了常量字符串，所以p指向的内容是不应该被修改的，那么更规范的写法应该是给char前面加一个const，限制p，使其指向值不能通过p来<code>解引用</code>而引起改变。<br>
+下面这个例子也是同样的道理。</p>
+<pre><code class="language-c">char arr1[]=&quot;chengzi&quot;;
+char arr2[]=&quot;chengzi&quot;;
+char* arr3=&quot;chengzi&quot;;
+char* arr4=&quot;chengzi&quot;;
+</code></pre>
+<p>上面一共给出了4个项，那么请问arr1是否等于arr2呢？arr3又是否等于arr4呢？<br>
+答案是arr1不等于arr2，arr3等于arr4。<br>
+首先我们要明白，等于在这里是什么意思？放到程序中就是这样的写法：</p>
+<pre><code class="language-c">if(arr1==arr2)
+</code></pre>
+<p>这里的等于并非数值上的相等，而是地址是否相同。那么arr1和arr2是不相同的。虽然两个字符串数组的初始化内容一样，但开辟的<code>内存块</code>是不同的，也就是说，本质上arr1和arr2只是形状一样的处于不同地点的两栋房子，其本质上是具有区别的。而指针就不同了，指针可以理解为门牌号，arr3和arr4都是一个门牌号，他们都指向chengzi这栋房子。从内存角度来讲，c/c++会将常量字符串存储至单独的<code>一块内存区域</code>，当有几个指针<code>同时指向这个字符串</code>时，都是<code>指向同一块内存</code>的。</p>
+<h2 id="数组指针">数组指针</h2>
+<p>在讲数组指针之前，先谈谈<code>指针数组</code>。<br>
+指针数组在之前的文章中也提到过，其本质上是一个数组而非指针。只是这个数组中存放的是<code>指针型</code>而已。千万不要搞混淆了。</p>
+<pre><code class="language-c">int* arr[10];
+char* str[10];
+</code></pre>
+<p>这样类型的都是指针数组，存放着地址的<code>数组</code>。<br>
+但数组指针就不一样了，数组指针是<code>指针</code>。那么类比整型指针，字符型指针，不难得出结论：数组指针，就是指向数组的指针。<br>
+其基本格式为：</p>
+<pre><code class="language-c">int (*p)[10];
+</code></pre>
+<p>括号请<code>不要去掉</code>，一旦去掉，就成为了指针数组。因为在一般情况下，[]的优先级会比*更高。<br>
+括起来之后，<code>*就先与p结合</code>，说明了此时的p是一个指针，再将p取出来，剩下的就是<code>int(*)[10]</code>,说明其指向的是一个存放了10个数的数组。</p>
+<h3 id="arr与arr的区别">arr与&amp;arr的区别</h3>
+<p>我们可以把他俩放到一个程序中运行得出结果，会发现两个值通过%p打印出来都是<code>相同的地址</code>，这能否说明二者相同呢？<br>
+在程序上运行这个代码：</p>
+<pre><code class="language-c">int arr[10]={0};
+printf(&quot;%p\n&quot;,arr);
+printf(&quot;%p\n&quot;,&amp;arr);
+</code></pre>
+<p>二者打印结果相同。再加上两行：</p>
+<pre><code class="language-c">printf(&quot;%p\n&quot;,arr+1);
+printf(&quot;%p\n&quot;,&amp;arr+1);
+</code></pre>
+<p>运行得到结果，会发现第三个第四个的打印结果不一样。<br>
+这里参照我的运行实例。</p>
+<blockquote>
+<p>00000080F2B8FB78<br>
+00000080F2B8FB78<br>
+00000080F2B8FB7C<br>
+00000080F2B8FBA0</p>
+</blockquote>
+<p>第三个和第四个相减，转换为十进制，得到36。<br>
+所以，不难猜到，&amp;arr表示的是<code>数组的地址</code>，而并非<code>数组首元素</code>的地址。<br>
+那么联系到指针的步长，&amp;arr其实就是指向的就是<code>int(*)[]</code>类型，它加1就使得整个指针<code>跳过了数组</code>。而arr单单只可以表示<code>首元素</code>的地址。那么，其+1就不过是将指针指向arr[1]而已。二者差距9个元素，一个元素4字节，也就是36个字节了。</p>
+<h3 id="使用示例">使用示例</h3>
+<p>那到底数组指针有什么意义呢？它在写的代码里又能起到什么作用呢？<br>
+要记住的是：数组指针中存放着数组的地址。</p>
+<pre><code class="language-c">int main()
+{
+	int arr[3][3] = { 1,2,3,4,5,6,7,8,9 };
+	PrintArr(arr, 3, 3);
+}
+</code></pre>
+<p>这里传递的arr实际上就是相当于<code>第一行的那个一维数组的地址</code>。这点一定要结合刚才讲的知识点想清楚。<br>
+实现一个函数，让PrintArr打印出这个二维数组。其中的一个参数就可以用数组指针来接收这个一维数组的地址。</p>
+<pre><code class="language-c">void PrintArr(int(*arr)[3],int a,int b) {
+	for (int i = 0; i &lt; a; i++)
+	{
+		for (int j = 0; j &lt; b; j++)
+		{
+			printf(&quot;%d &quot;, arr[i][j]);
+		}
+	}
+}
+</code></pre>
+<p>参数里的数组指针也可以换成普通的int arr[3][3]。但是一旦遇到上面这种情况，就一定要睁大眼睛咯，毕竟这种写法在平常的学习中较为少见。</p>
+<h2 id="函数指针">函数指针</h2>
+<p>那么函数指针，也就是指向函数的指针。<br>
+先上一个示例：</p>
+<pre><code class="language-c">printf(&quot;%p&quot;,hanshu1);
+printf(&quot;%p&quot;,&amp;hanshu1);
+</code></pre>
+<p>在编译器上运行，得到的结果也是相同的。二者所得到的都是函数的地址，并且在这里<code>意义相同</code>。</p>
+<p>函数指针就是用来保存函数地址的，其格式如下：</p>
+<pre><code class="language-c">void (*p)();
+</code></pre>
+<p>和上文的数组指针一个道理，这个指针指向一个函数，并且本代码的指针指向函数的类型是void，并且无参。</p>
+<p>来看一个绕有意义的例子，来自于书《c陷阱与缺陷》。</p>
+<pre><code class="language-c">(*(void(*)())0)();
+</code></pre>
+<p>第一眼看起来是个很复杂的式子，但只要拆开来也不是很复杂。首先把void(*)()单独提出来，就是刚才才提到的函数指针类型，它将0强制转换成了一个函数指针的类型，那么整体的来看其实就是将0当作一个函数地址，然后通过解引用的方法去调用这个函数，最后跟的()意思是因为0被调用后是无参类型的，所以()也就不用写参数。</p>
+<p>既然指针数组都存在，那么函数指针数组也肯定存在了。放在这里简单的提一下。<br>
+其基本格式为</p>
+<pre><code class="language-c">int (*p[10])();
+</code></pre>
+<p>根据优先级的规定，p会先与[]结合，说明其是一个<code>数组</code>，去掉这个数组，剩下了int(*)(),不正好就是函数指针类型吗？说明这是一个存放着函数指针的数组。<br>
+函数指针数组常用来精简代码量。让代码看起来更简洁且易读。</p>
+<p>例如，如果实现一个简单的计算器，就需要做多个函数，例如就添加加减乘除四个功能，就需要单独的四个函数，add，sub，mul，div。然后通过switch结构调用不同的函数来实现。<br>
+但可以使用函数指针数组来实现代码的精简化。<br>
+例如：</p>
+<pre><code class="language-c">int(*p[4])(int x ,int y)={add,sub,mul,div};
+</code></pre>
+<p>这样就将四个函数放进了一个函数指针的数组。（&amp;函数名和函数名是同样作用）<br>
+然后通过控制p[]中的数字，就能调用不同的函数，就实现了对switch结构的精简化。</p>
+<h2 id="指向函数指针数组的指针">指向函数指针数组的指针</h2>
+<p>正在逐步的套娃化·····<br>
+简单的对定义做一个拆分，这个指针指向一个数组，其数组里装的元素都是函数指针类型。<br>
+该如何去书写呢？</p>
+<pre><code class="language-c">void(*p)()=test; //函数指针p指向test函数
+void(*parr[5])();
+*parr[0]=test; //将test函数存入一个函数指针数组
+void(*(*pparr)[5])()=&amp;parr;  //指向函数指针数组的指针
+
+</code></pre>
+<p>拆分一下，<em>先与pparr结合，说明了pparr是一个指针。把</em>pparr丢掉，得到void(*()[5])()，其是一个函数指针数组类型。<br>
+但是并不怎么用到，只是简单的介绍。<br>
+到这里，就将c中常见的指针介绍完毕了。</p>
+<h1 id="传参">传参</h1>
+<p>接下来也是个重点内容---传参。在构建函数时，我们总是会遇到一个问题---参数到底怎么写？<br>
+简单的就像普通的数据类型，int，char，稍复杂的会遇到二级指针之类的，在这里我们简单的盘点一下常见的函数传参怎么个写法。</p>
+<h2 id="数组传参">数组传参</h2>
+<p>这块可以分为一维和二维来处理。<br>
+先说一维的。</p>
+<pre><code class="language-c">int arr1[10]={0};
+int* arr2[10]={0};
+</code></pre>
+<p>在这里定义了两个数组，arr1存放int型，arr2存放int*型，那么二者该如何放进函数里进行传参呢？<br>
+常见的有这五种。</p>
+<pre><code class="language-c">//arr1
+void test(int arr1[]);
+void test(int arr1[10]);
+void test(int* arr1);
+//arr2
+void test(int* arr2[10]);
+void test(int**arr2);
+</code></pre>
+<p>简单的讲一下。<br>
+对于arr1而言，就是一个简单的int型数组，那么最普通的写法也就是照猫画虎直接传，[]里面的可写可不写。<br>
+也可以写成指针的形式，传入arr1这个数组的首地址。<br>
+arr2也是同样的道理，要不就照猫画虎，要不就采用指针的形式来传入。这里的int* *arr2,第一个 * 和int一起，代表指针指向类型为int *,第二个 *则代表这是一个<code>指针</code>。</p>
+<p>讲完一维再来说说二维。</p>
+<pre><code class="language-c">int arr[2][2]={0};
+</code></pre>
+<p>下面哪几种是可行的呢？</p>
+<pre><code class="language-c">void test(int arr[2][2]);
+void test(int arr[][]);
+void test(int arr[][2]);
+void test(int *arr);
+void test(int* arr[2]);
+void test(int(*arr)[2]);
+void test(int* *arr);
+</code></pre>
+<p>这里提供了七种写法，一种一种的来分析下。<br>
+第一种肯定是没问题的，原样传入。第二种就不行了，二维数组由于其特殊性，至少需要要求<code>列的数值</code>，如果没有列的数值，是无法计算的。而行可以省略。那么第三种也是可行的。<br>
+第四种是一个典型的一维数组传法，所以不正确。<br>
+第五种则是上文讲到的指针数组，其本质是数组，存放的是指针。不正确。<br>
+第六种是一个数组指针，在这块温习一下二维数组的相关知识点。二维数组可以看成<code>多个一维数组</code>排列而成的。如果传入像第四种，那么传入的实际就是第一行那个一维数组的<code>首元素地址</code>，也就无法接收到整个二维数组了。<br>
+那么第六种显然是可行的，使用数组指针来接收数组。<br>
+第七种采用的是二级指针的写法，在这里书写显然是不合适的。int* *arr本质上用于接收一级指针的地址。</p>
+<h2 id="指针传参">指针传参</h2>
+<p>接下来就讲讲一级和二级指针传参。</p>
+<p>先说一级。</p>
+<pre><code class="language-c">void test(int* p);
+</code></pre>
+<p>当你看到这样的例子，你能写出它能接收哪些形式的传参吗？<br>
+大概常见的有以下几种。</p>
+<pre><code class="language-c">test(&amp;p);
+test(pp); //这里的pp是一个一级指针
+test(arr); //arr是数组名
+</code></pre>
+<p>指针为二级的时候呢？</p>
+<pre><code class="language-c">void test(int* *p);
+</code></pre>
+<p>答案如下：</p>
+<pre><code class="language-c">int* *prr;
+test(ppr); //接收为二级，传入当然也可以为二级
+int *pp;
+test(&amp;pp); //取一级指针的地址
+int* arr[3];
+test(arr); //传入指针数组
+</code></pre>
+<p>稍微提一下指针数组。当传入arr时，p就可以作为指向int*型的指针。其本质与传入一维数组时，参数写成int *p是一样的道理。与p相结合的 * 说明p为指针。</p>
+<h1 id="一些例题">一些例题</h1>
+<h2 id="题1">题1</h2>
+<blockquote>
+<p>声明一个指向含有10个元素的数组的指针，其中每个元素是一个函数指针，该函数的返回值是int，参数是int*，正确的是（ ）<br>
+A.(int <em>p[10])(int</em>)<br>
+B.int [10]*p(int <em>)<br>
+C.int (</em>(*p)[10])(int *)<br>
+D.int ((int *)[10])*p</p>
+</blockquote>
+<p>题解：整体上去看是一个存放数组的指针。那么其指向类型可以写为 int(*)[],到这里基本就已经确定答案为c了。再去分析下c，将存放这个数组的指针剥离，留下了(int)( * )(int *)，和题的后文相吻合。答案确定为c。</p>
+<h2 id="题2">题2</h2>
+<pre><code class="language-c">int main()
+{
+  int aa[2][5] = {10,9,8,7,6,5,4,3,2,1};
+  int *ptr1 = (int *)(&amp;aa + 1);
+  int *ptr2 = (int *)(*(aa + 1));
+  printf( &quot;%d,%d&quot;, *(ptr1 - 1), *(ptr2 - 1));
+  return 0;
+}
+</code></pre>
+<p>求输出结果。</p>
+<p>题解： 这里主要考察了对<code>数组取地址</code>的相关知识点。aa+1和&amp;aa+1有着本质上的区别。在上文我们已经介绍过，&amp;aa代表着取出了<code>整个数组</code>的地址,而aa仅代表着取出<code>数组首元素的地址</code>。那么&amp;aa+1就跳过了整个数组，由于指针是int型，那么ptr-1只会减去4个字节，对于int型数组而言，也就是<code>向前挪动一个元素</code>。再来看ptr2，aa在这里是首元素地址，但这里和一维数组不同的是，此时的aa+1是相对于行而言的，他跳过的是第一行，而不是第一个元素，这是需要留意的点。*(aa+1)其实就等价于aa[1]，此时它指向的就是第二行首元素，也就是5，减1减去的是4个字节，也就得到了6。那么答案就是输出1，6。</p>
+<h2 id="题3">题3</h2>
+<pre><code class="language-c">int main()
+{
+  int a[5] = {5, 4, 3, 2, 1};
+  int *ptr = (int *)(&amp;a + 1);
+  printf( &quot;%d,%d&quot;, *(a + 1), *(ptr - 1));
+  return 0;
+}
+</code></pre>
+<p>题解：&amp;a取到整个数组，ptr指向&amp;a+1，也就指向了数组的末尾。减一就指向了元素1。a+1则是单纯从首元素+1，在这里就不过多解释了，得出答案，输出4，1。</p>
+<h2 id="题4">题4</h2>
+<pre><code class="language-c">int a[]={1,2,3};
+printf(&quot;%d\n&quot;,sizeof(a));
+printf(&quot;%d\n&quot;,sizeof(a+0));
+printf(&quot;%d\n&quot;,sizeof(*a));
+printf(&quot;%d\n&quot;,sizeof(a+1));
+printf(&quot;%d\n&quot;,sizeof(a[1]));
+printf(&quot;%d\n&quot;,sizeof(&amp;a));
+printf(&quot;%d\n&quot;,sizeof(*&amp;a));
+printf(&quot;%d\n&quot;,sizeof(&amp;a+1));
+printf(&quot;%d\n&quot;,sizeof(&amp;a[0]));
+printf(&quot;%d\n&quot;,sizeof(&amp;a[0]+1));
+</code></pre>
+<p>判断以上示例的输出。<br>
+题解：</p>
+<pre><code class="language-c">int a[]={1,2,3};
+printf(&quot;%d\n&quot;,sizeof(a));  //答案为12，因为sizeof（数组名）时，计算的是整个数组的大小。所以为3*4=12
+printf(&quot;%d\n&quot;,sizeof(a+0)); //答案为4或者8（与编译平台有关），这里不是单纯数组名，而是一个表达式，所以a其仅代表首元素地址，地址+0仍然是地址，其大小为4/8.
+printf(&quot;%d\n&quot;,sizeof(*a)); //答案为4，这里通过解引用操作取出了数组的首元素，其大小为4个字节。
+printf(&quot;%d\n&quot;,sizeof(a+1)); //答案为4/8，a+1明显是一个地址，这里是偏移到了第二个元素的地址。
+printf(&quot;%d\n&quot;,sizeof(a[1])); //答案为4。
+printf(&quot;%d\n&quot;,sizeof(&amp;a)); //答案为4/8，&amp;数组名在一般情况下都是指取出整个数组的地址。
+printf(&quot;%d\n&quot;,sizeof(*&amp;a)); //答案为12，&amp;a拿到整个数组的地址，再进行解引用，其本质还是相当于sizeof（a）
+printf(&quot;%d\n&quot;,sizeof(&amp;a+1)); //答案是4/8，&amp;a+1跳过了整个数组，但指向后面时也仍然是一个地址。
+printf(&quot;%d\n&quot;,sizeof(&amp;a[0])); //答案是4/8，取址符&amp;取到了a[0]的地址。
+printf(&quot;%d\n&quot;,sizeof(&amp;a[0]+1)); //答案是4/8，同上。
+</code></pre>
+<p>总结几点做这种题的关键，也是后面几道题需要掌握的核心知识。</p>
+<blockquote>
+<p>sizeof(数组名)和&amp;数组名，两种情况其中的数组名都是代表整个数组，所以sizeof会计算整个数组的大小，&amp;会取出整个数组的地址。<br>
+其他情况遇到数组名都是代表数组的首元素。<br>
+遇到地址时，一律判断其大小为4/8，具体取决于你的编译器。如x86平台就是4字节。<br>
+&amp;a+1会跳过整个数组，因为&amp;a取出的是整个数组。</p>
+</blockquote>
+<h2 id="题5">题5</h2>
+<p>就不再过多浪费篇幅，题目和答案一同给出。</p>
+<pre><code class="language-c">char a[]={'a','b','c','d'};
+printf(&quot;%d\n&quot;,sizeof(arr));  //答案为4，这里是整个char型数组的大小。
+printf(&quot;%d\n&quot;,sizeof(arr+0));  //答案为1，此时的arr仅代表首元素地址。
+printf(&quot;%d\n&quot;,sizeof(*arr));  //答案为1，取出的是首元素。
+printf(&quot;%d\n&quot;,sizeof(arr[1])); //答案为1，同上。
+printf(&quot;%d\n&quot;,sizeof(&amp;arr));  //答案为4/8，是整个数组的地址。
+printf(&quot;%d\n&quot;,sizeof(&amp;arr+1)); //答案为4/8
+printf(&quot;%d\n&quot;,sizeof(&amp;arr[0]+1)); // 答案为4/8
+
+printf(&quot;%d\n&quot;,strlen(arr));  //答案为未知，因为strlen的计算规则是遇到'\0'才停止。
+printf(&quot;%d\n&quot;,strlen(arr+0));  //答案为未知，同上。
+printf(&quot;%d\n&quot;,strlen(*arr));  //答案为错误，*arr取出的是本质是个int型，而非地址。
+printf(&quot;%d\n&quot;,strlen(arr[1])); //答案为错误，同上。
+printf(&quot;%d\n&quot;,strlen(&amp;arr)); //答案为未知，同样不清楚斜杠0到底位于哪里。
+printf(&quot;%d\n&quot;,strlen(&amp;arr+1)); //答案为未知，同上。
+printf(&quot;%d\n&quot;,strlen(&amp;arr[0]+1)); //答案为未知，同上。
+</code></pre>
+<h2 id="题6">题6</h2>
+<pre><code class="language-c">char arr[]=&quot;abcdef&quot;;
+printf(&quot;%d\n&quot;,sizeof(arr));  //答案为7，和上一题的数组不同，这里的是字符串，所以在末位包含了一个'\0'，也要算进sizeof的计数规则来。
+printf(&quot;%d\n&quot;,sizeof(arr+0)); //答案为4/8，arr此时代表地址。
+printf(&quot;%d\n&quot;,sizeof(*arr));  //答案为1。不再赘述。
+printf(&quot;%d\n&quot;,sizeof(arr[1])); //答案为1。
+printf(&quot;%d\n&quot;,sizeof(&amp;arr));  //答案为4/8。
+printf(&quot;%d\n&quot;,sizeof(&amp;arr+1)); //答案为4/8。
+printf(&quot;%d\n&quot;,sizeof(&amp;arr[0]+1)); //答案为4/8。
+
+printf(&quot;%d\n&quot;,strlen(arr));  //答案为6，此时字符串尾部有斜杠0，所以值不再随机。
+printf(&quot;%d\n&quot;,strlen(arr+0)); //答案为6，同上。
+printf(&quot;%d\n&quot;,strlen(*arr)); //错误。
+printf(&quot;%d\n&quot;,strlen(arr[1])); //错误。
+printf(&quot;%d\n&quot;,strlen(&amp;arr)); //答案为6，同第一种情况。
+printf(&quot;%d\n&quot;,strlen(&amp;arr+1)); //答案为未知，+1跳过了整个数组。
+printf(&quot;%d\n&quot;,strlen(&amp;arr[0]+1)); //答案为5，从arr[1]开始计数，直到斜杠0。
+</code></pre>
+<h2 id="题7">题7</h2>
+<pre><code class="language-c">char *p=&quot;abcdef&quot;;
+printf(&quot;%d\n&quot;,sizeof(p));  //答案为4/8，指针的大小也是4/8，取决于平台是32位还是64位。
+printf(&quot;%d\n&quot;,sizeof(p+1)); //答案为4/8，是一个地址。
+printf(&quot;%d\n&quot;,sizeof(*p));  //答案为1，*p取出来的是a这个字符。
+printf(&quot;%d\n&quot;,sizeof(p[0])); //答案为1，和*p同理。
+printf(&quot;%d\n&quot;,sizeof(&amp;p)); //答案为4/8，是一个地址。
+printf(&quot;%d\n&quot;,sizeof(&amp;p+1));  //答案为4/8。
+printf(&quot;%d\n&quot;,sizeof(&amp;p[0]+1)); //答案为4/8。
+
+printf(&quot;%d\n&quot;,strlen(p)); //答案为6，p里存放的正是常量字符串的地址。
+printf(&quot;%d\n&quot;,strlen(p+1)); //答案为5,p+1偏移到b这个字符上。
+printf(&quot;%d\n&quot;,strlen(*p)); //答案为错误，只能放地址。
+printf(&quot;%d\n&quot;,strlen(p[0])); //错误，同上。
+printf(&quot;%d\n&quot;,strlen(&amp;p)); //答案为未知，取的是p的地址，斜杠0不知道在哪里出现。
+printf(&quot;%d\n&quot;,strlen(&amp;p+1)); //答案为未知，同上。
+printf(&quot;%d\n&quot;,strlen(&amp;p[0]+1)); //答案为5，同第二种情况。
+</code></pre>
+<h2 id="题8">题8</h2>
+<pre><code class="language-c">int a[3][3]={0};
+printf(&quot;%d\n&quot;,sizeof(a)); //答案为36，这里的a代表了整个二维数组。
+printf(&quot;%d\n&quot;,sizeof(a[0][0])); //答案为4。
+printf(&quot;%d\n&quot;,sizeof(a[0])); //答案为12，这里的a[0]就是二维数组的第一排，也就是一个一维数组。在这里也就是计算一个一维数组的大小。
+printf(&quot;%d\n&quot;,sizeof(a[0]+1)); //答案为4/8，这里是一个地址，代表着二位数组的第二排。
+printf(&quot;%d\n&quot;,sizeof(*(a[0]+1))); //答案为4，解引用出来的就是第二排首元素。
+printf(&quot;%d\n&quot;,sizeof(a+1)); //答案为4/8，这里是第二行的一维数组的地址。
+printf(&quot;%d\n&quot;,sizeof(*(a+1))); //答案为12，对第二行的数组进行解引用，取出了第二行整个数组。
+printf(&quot;%d\n&quot;,sizeof(&amp;a[0]+1)); //答案为4/8，&amp;a[0]是第一行的地址，+1变成了第二行的地址。
+printf(&quot;%d\n&quot;,sizeof(*(&amp;a[0]+1))); //答案为12，同第七种。
+printf(&quot;%d\n&quot;,sizeof(*a)); //答案为12，解引用出来是第一行的元素。
+printf(&quot;%d\n&quot;,sizeof(a[3])); //答案为12。
+</code></pre>
+<blockquote>
+<p>请牢记，二维数组的名字，相当于是二维数组的第一行的地址，是一个<code>一维数组的地址</code>。</p>
+</blockquote>
+<h2 id="题9">题9</h2>
+<pre><code class="language-c">int a[5]={1,2,3,4,5};
+int *ptr=(int*)(&amp;a+1);
+printf(&quot;%d,%d&quot;,*(a+1),*(ptr-1));
+return 0;
+</code></pre>
+<p>题解：&amp;a是取出了数组的整个地址，+1会跳过整个数组。而（a+1）仅代表其从首元素位置前进4个字节，解引用得到2，*（ptr-1）得到5。</p>
+<h2 id="题10">题10</h2>
+<p>假设p为结构体变量指针，结构体大小为20个字节，p的值为0x100000</p>
+<pre><code class="language-c">printf(&quot;%p\n&quot;,p+0x1);
+printf(&quot;%p\n&quot;,(unsigned long)p+0x1);
+printf(&quot;%p\n&quot;,(unsigned int*)p+0x1);
+</code></pre>
+<p>题解：p自己加1，意味着加一个结构体的大小，所以是0x100014，记得是十六进制哦。<br>
+p被强转为unsigned long型，是个整型，整型+1直接加1即可。得到0x100001。<br>
+p被强转为指针型，+1就加一个该指针类型的大小，所以+4，得到0x100004。</p>
+<h2 id="题11">题11</h2>
+<pre><code class="language-c">int a[]={1,2,3,4};
+int *ptr1=(int*)(&amp;a+1);
+int *ptr2=(int*)((int)a+1);
+printf(&quot;%x.%x&quot;,ptr1[-1],*ptr2);
+return 0; 
+</code></pre>
+<p>题解： ptr1跳过数组，指向数组尾部。ptr1[-1]可以转化为*（ptr1-1），也就是指向了4，要注意题目是要求十六进制输出。第二个就有点意思了。a被强转成了（int），也就意味着此时+1也不过<code>移动了一个字节</code>而已。那么ptr2解引用取到的就是<code>从首元素的第二个字节开始取四个字节</code>，也就取出了00 00 00 02，<br>
+默认环境为小端，还原为02 00 00 00 ，转换为十六进制是多少就不多赘述。</p>
+<h2 id="题12">题12</h2>
+<pre><code class="language-c">int a[3][2]={(0,1),(2,3),(4,5)};
+int *p;
+p=a[0];
+printf(&quot;%d&quot;,p[0]);
+</code></pre>
+<p>题解： 本题存在一个易错点，就在二维数组那里。他并非是一个初始化了三行二列的数组，实际上他只初始化了一排，其中的(0,1)这些是逗号表达式，其值为1，后面的值为3，5，要想完全初始化是这样的：</p>
+<pre><code class="language-c">int a[3][2]={{0,1},{2,3},{4,5}};
+</code></pre>
+<p>一定要看仔细了。那么p[0]得到的就是1了。</p>
+<h2 id="题13">题13</h2>
+<pre><code class="language-c">int a[5][5];
+int(*p)[4];
+p=a;
+printf(&quot;%p,%d&quot;,&amp;p[4][2]-&amp;a[4][2],&amp;p[4][2]-&amp;a[4][2]);
+</code></pre>
+<p>题解：这道题稍难一些。a是一个二维数组，上文讲过，a是第一行的数组地址。那么a的类型就是int(*)[5],p的类型是int( * )[4],二者的类型是不匹配的，但是仍然可以实现强转。但是强转之后就要注意了，二者类型是不同的，那就意味着<code>+1的步长是不同</code>的。这点明白了就很好做题了，也就是，p+1一次跳过4个子节，而a+1一次会跳过五个字节，图就在下方，自行理解。</p>
+<img src='https://imgbed.link/file/15270'>
+<p>剩下的也就是%d和%p打印的区别了，%d打印出来就是-4，而当作地址打印时要转换为原码（-4被当作是一个地址），然后换为16进制才行。</p>
+<p>&lt;有好题再不定期更新到这来。&gt;</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【java】以简单的图书管理系统讲清楚类，对象，继承，多态与接口的相关知识点]]></title>
+        <id>https://taylor516.github.io/post/chengzi-java-Classes and objects/</id>
+        <link href="https://taylor516.github.io/post/chengzi-java-Classes and objects/">
+        </link>
+        <updated>2023-03-01T11:42:17.000Z</updated>
+        <content type="html"><![CDATA[<blockquote>
+<p>【前言】🍊以图书管理系统的实现，来讲清楚一些java入门学习阶段非常重要的概念与思想。包括类与对象，接口与继承，还有多态等等基础且重要的知识点。</p>
+</blockquote>
+<h1 id="️-准备">⚽️ 准备</h1>
+<p>构建一个简单的图书管理系统，可以大致分为三个package。</p>
+<ul>
+<li>user包</li>
+<li>book包</li>
+<li>operation包</li>
+</ul>
+<p>也就是分为<code>用户，书，操作功能</code>。<br>
+其中user包包含user类，regularuser类，adminuser类。<br>
+book包包含book类，booklist类。<br>
+operation包包含addbook类，deletebook类，findbook类，borrowbook类，returnbook类。</p>
+<h1 id="类与对象">🏀类与对象</h1>
+<p>上面我们提到了类，那什么是类？<br>
+java是一门<code>面向对象</code>的语言。面向对象就是依靠<code>对象的交互</code>来完成一件事。使用面向对象的思路来写程序，会更加友好。<br>
+举个例子，比如你打算去菜市场买菜，你需要准备菜篮子，换好衣服，规划好一条路线，沿途会经过哪些商贩，又会去买哪些蔬菜······，但是如果使用外送服务，你只需要下单时注明需要什么菜，几时送到什么地方即可。在这个过程里，压根不会关心菜是怎么买来的。又比如洗衣服，传统的洗衣过程是很繁琐的，但现代的洗衣机可以让步骤节省到三步，丢衣服进去，洗衣，拿出来晾干。这就是面向对象来处理问题。<br>
+如上所说，洗衣机是对象，外送服务也是对象，对象就好比是<code>现实生活中的实体</code>。对对象进行一个<code>抽象</code>所得到的就是类。<br>
+那么在java中如何去描述一个类呢？定义一个类需要<code>class关键字</code>。<br>
+例如定义user类：</p>
+<pre><code class="language-java">public class User {
+    private String name;
+    
+}
+</code></pre>
+<p>括号中所包含的就是类的成员。属性用来<code>描述类</code>，称为<code>类的成员变量</code>。就像上面的user类，可以添加<code>名字name，年龄age，性别gender</code>等完善这个类，有点像c语言里的结构体。类中也可以包含<code>方法</code>，类似于c的函数。 在后面的例子里会添加方法。<br>
+类有以下几点需要注意：</p>
+<ul>
+<li>一般一个文件只定义<code>一个类</code>。</li>
+<li>main方法所在类需要public修饰。</li>
+<li>public修饰的类的名字要和<code>文件名相同</code>。</li>
+</ul>
+<blockquote>
+<p>类就好比是一个<code>模板</code>，对象就是依托于模板构建出来的<code>实例</code>，用类这个类型创建对象，这个过程我们称为<code>实例化</code>。<br>
+一个明显的类比：类实例化出对象，就相当于用设计图纸建造一栋真实的房子。</p>
+</blockquote>
+<p>在java里，定义一个类，就相当于创造了一个新的类型，我们可以通过<code>new关键字</code>，来配合类实例化出各种对象。</p>
+<ul>
+<li>new的对象都是在<code>堆上</code>。所以其生命周期与程序的运行周期一样。</li>
+</ul>
+<p>例如实例化一个用户：</p>
+<pre><code class="language-java"> public static void main(String[] args) {
+        User person1=new User(&quot;taylor&quot;);  //实例化的基本格式
+        System.out.println(person1.name);
+    }
+</code></pre>
+<p>这样就实例化出一个对象peison1，并且可以赋名为taylor（这个要配合构造方法，后面会讲）。</p>
+<ul>
+<li>用<code>.</code>来访问对象中的属性和方法。如上面的输出，就可以调用person1.name，来打印person1的名字。</li>
+<li>同一个类创建多个实例。</li>
+</ul>
+<p>接着创建出Regularuser和Adminuser两个类来。</p>
+<h1 id="构造方法">🏈 构造方法</h1>
+<p>在写这两个类前需要在user类里添加<code>构造方法</code>。<br>
+首先搞明白什么是构造方法。<br>
+就像我们熟知的，定义一个局部变量，在使用前必须要<code>初始化</code>，类也是一样。类借助<code>构造方法来完成初始化</code>。但<code>不</code>负责开辟空间。<br>
+构造方法是一个特殊的成员方法。</p>
+<ul>
+<li><code>名字必须与类名相同</code>。</li>
+<li>一般由<code>public</code>修饰。</li>
+<li>没有返回值类型。</li>
+</ul>
+<blockquote>
+<p>并且在创建对象（实例化）时，由编译器来<code>自动</code>进行调用，且在生命周期类只调用<code>一次</code>。</p>
+</blockquote>
+<p>以下就是书写User类的构造方法，因为我们只定义了一个name变量，所以构造方法里也只需要对name进行初始化。</p>
+<pre><code class="language-java">public class User {
+    private String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+}
+</code></pre>
+<p>这是<code>有参数</code>的构造方法。如果我们没有<code>显式定义</code>，编译器在编译时也会<code>自动生成无参数</code>的构造方法。但是一但用户自己定义了，编译器就<code>不再生成</code>。</p>
+<pre><code class="language-java">public User(){
+      //无参的构造方法，可以在此放入初始化的变量，如this.name=&quot;hehe&quot;; 如果user类没有成员也可以啥都不写
+}
+</code></pre>
+<p>在构造方法里，有一个this关键字。<br>
+其作用在于：</p>
+<blockquote>
+<p>this引用指向当前对象。也就是说，<code>谁在调用这个方法，谁就是this</code>。<br>
+this.name = name的意思就是将传进来的name赋给了这个类的对象的name。</p>
+</blockquote>
+<p>构造方法可以进行<code>重载</code>。也就是在一个类里可以对构造方法<code>根据用户不同的需求</code>提供。</p>
+<pre><code class="language-java">public class User {
+    private String name;
+    int age;
+    public User()
+    {
+        this.name=&quot;xiaoming&quot;;
+        this.age=12;
+        System.out.println(&quot;调用了无参构造方法&quot;);
+    }
+    public User(String name) {
+        this.name = name;
+        System.out.println(&quot;调用了只需name的构造方法&quot;);
+    }
+    public User(String name,int age){
+        this.age=age;
+        this.name=name;
+        System.out.println(&quot;调用了需要name和age的构造方法&quot;);
+    }
+
+    public static void main(String[] args) {
+        User person1=new User(&quot;taylor&quot;);
+        System.out.println(person1.name);
+    }
+}
+</code></pre>
+<p>我们只初始化了name这个属性，那么就调用参数只有name的构造方法。<br>
+如果只初始化name，但要求访问age呢？</p>
+<pre><code class="language-java">   User person1=new User(&quot;taylor&quot;);
+        System.out.println(person1.age);
+</code></pre>
+<p>输出<code>0</code><br>
+这是为何呢？我们明明只初始化了name呀，为何age可以输出为0？</p>
+<blockquote>
+<p>在new的时候，编译器就自动完成了对成员变量的<code>默认初始化</code>了。即当对象<code>空间被申请好</code>，对象中所包含的成员就已经<code>设置好了初值</code>。</p>
+</blockquote>
+<ul>
+<li>boolean   false</li>
+<li>char    '/uoooo'(null)</li>
+<li>byte (byte)0</li>
+<li>short (short)0</li>
+<li>int 0</li>
+<li>long 0L</li>
+<li>float 0.0f</li>
+<li>double 0.0d</li>
+</ul>
+<p>以上就是关于构造方法需要掌握的一些知识点。在书写完user类的构造方法后就可以去写adminuser类和regularuser类了。</p>
+<h1 id="️继承">⚾️继承</h1>
+<p>普通用户和管理员用户，虽然对系统所拥有的权限不完全相同，但也有大量相似的信息，面向对象的思想中提出了继承的概念，用以进行<code>共性抽取与代码的复用</code>。</p>
+<blockquote>
+<p>继承机制，允许在保持原有类特性的基础上。来进行一个拓展，并往里面添加<code>新的功能</code>。<br>
+另一个功能就是实现<code>多态</code>。</p>
+</blockquote>
+<p>比如往类中放入名字，年龄，性别等成员变量，这些变量在adminuser类和regularuser类里都会用到，那么出于代码复用的思想，就可以将其提取出来作为一个公用的父类（也被称为基类），通过继承后，就可以使得子类可以<code>复用父类中的成员，并只需要添加自己所需要的特别的成员或方法</code>。<br>
+继承需要借助<code>关键字extends</code>:<br>
+普通用户类：</p>
+<pre><code class="language-java">public class Regularuser extends User{
+    
+    public Regularuser(String name) {
+        super(name);
+    }
+}
+</code></pre>
+<p>管理员类：</p>
+<pre><code class="language-java">public class Adminuser extends User {
+    public Adminuser(String name) {
+        super(name);
+    }
+}
+</code></pre>
+<blockquote>
+<p>可以看到，子类也是有构造方法的。但是<code>有其子之前必须先有父</code>，在对子类对象进行一个构造时，需要先去调用<code>父类</code>的构造方法，再执行<code>子类</code>的构造方法。</p>
+</blockquote>
+<ul>
+<li>子类对象成员有两部分组成，父类继承下来的和子类新增加的。</li>
+<li>若父类是<code>无参构造</code>，则子类的无参构造<code>第一行</code>会默认是<code>super();</code>。</li>
+<li>若父类是<code>有参构造</code>，则此时就需要为子类显式定义构造方法，并且在子类构造方法中<code>选择合适的父类构造方面调用</code>。</li>
+<li><code>super关键字</code>就可以实现父类构造方法的调用，且必须是子类构造方法中的<code>第一行</code>才行，<code>不能与this同时出现</code>。</li>
+</ul>
+<p>就像上面写的两个类，都继承于父类user，那么都需要在自己的构造方法第一行通过super关键字来调用父类构造，否则<code>编译器报错</code>。<br>
+如果父类传下来多个参数呢？那么就顺着书写就好了。</p>
+<pre><code class="language-java">super(name,age,gender);
+</code></pre>
+<p>又比如现在在regularuser类里有一个只属于regularuser的属性，其构造方法就是这样：</p>
+<pre><code class="language-java">public class Regularuser extends User{
+
+   String Specialproperties;
+   public Regularuser(String name, String specialproperties) {
+       super(name);
+       this.Specialproperties = specialproperties;
+   }
+}
+</code></pre>
+<p>关于继承还有一个小tip：<code>各类代码块的执行顺序</code>。<br>
+代码块可以分为三种：<br>
+<em>静态代码块</em></p>
+<pre><code class="language-java">static{}
+</code></pre>
+<p><em>实例代码块</em></p>
+<pre><code class="language-java">{}
+</code></pre>
+<p><em>构造代码块</em></p>
+<pre><code class="language-java">public 类名(){}
+</code></pre>
+<p>其执行顺序为：</p>
+<blockquote>
+<p>1.父类静态代码块<br>
+2.子类静态代码块<br>
+3.父类实例代码块<br>
+4.父类构造代码块<br>
+5.子类实例代码块<br>
+6.子类构造代码块</p>
+</blockquote>
+<p>静态代码块会先执行，并且只在<code>类加载阶段执行一次</code>。当有<code>对象进行创建时</code>，才会去执行实例的代码块，<code>当实例代码块执行完毕才是构造代码块</code>。<br>
+父类静态代码块比子类更快，是<code>最早执行</code>的。<br>
+第<code>二</code>次实例化<code>子类对象</code>时，<code>父类与子类的静态代码块都不会再执行</code>。</p>
+<p>讲到这里了，就可以将book包里的book类和booklist类写一下了。<br>
+book类</p>
+<pre><code class="language-java">public class Book {
+    private String bookname;
+    private String author;
+    private String type;
+    private int price;
+    private boolean isborrowed;
+
+    public Book(String bookname, String author, String type, int price) {
+        this.bookname = bookname;
+        this.author = author;
+        this.type = type;
+        this.price = price;
+    }
+
+    public String getBookname() {
+        return bookname;
+    }
+
+    public void setBookname(String bookname) {
+        this.bookname = bookname;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public boolean isIsborrowed() {
+        return isborrowed;
+    }
+
+    public void setIsborrowed(boolean isborrowed) {
+        this.isborrowed = isborrowed;
+    }
+
+    @Override
+    public String toString() {
+        return &quot;Book{&quot; +
+                &quot;bookname='&quot; + bookname + '\'' +
+                &quot;, author='&quot; + author + '\'' +
+                &quot;, type='&quot; + type + '\'' +
+                &quot;, price=&quot; + price +
+                &quot;, isborrowed=&quot; + isborrowed +
+                '}';
+    }
+}
+</code></pre>
+<p>除了成员变量和构造方法，还额外加入了<code>各种变量的getter and setter以及toString方法的重写</code>。<br>
+getter和setter很好理解，就是<code>提供一个单一的方法来对特定的变量来进行赋值和取值的作用</code>。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        Book book =new Book(&quot;aaa&quot;,&quot;bbb&quot;,&quot;ccc&quot;,12);
+        System.out.println(book.getAuthor());
+        System.out.println(book.isIsborrowed());
+
+    }
+</code></pre>
+<p>这样就读取到了book这个对象的author以及isborrowed。也可以为其重新赋值。</p>
+<pre><code class="language-java">        book.setAuthor(&quot;taylor swift&quot;);
+        System.out.println(book.author);
+</code></pre>
+<p>还有toString方法，其是在<code>Object类</code>里定义的，其返回值类型为String类型，返回类名和它的引用地址。<code>Object类是所有类的父类</code>，所以我们可以在Book类中对这个方法进行<code>重写</code>。重写和重载是有很大的区别的。<br>
+在上文我们提到过重载，其是在<code>一个类中的多态表现</code>，而重写则是在<code>父类与子类之间的多态表现</code>。</p>
+<ul>
+<li>重载的<code>参数类型</code>是<code>必须修改</code>的，因为需要依靠传入参数不同来决定进入哪一个方法。具体可以看上文的重载实例。且<code>返回类型可以被修改</code>。</li>
+<li>而这里提到的重写，<code>参数列表是不可以被修改的</code>，返回类型一般也不可以改，除非是父子类关系。可以看出，重写是<code>重新书写一个方法的内部</code>，而重载是<code>提供多种同名方法的入口</code>。</li>
+</ul>
+<p>想调用toString方法也很简单，直接sout book这个对象即可。</p>
+<pre><code class="language-java">  System.out.println(book);
+</code></pre>
+<p>打印出重写的结果：</p>
+<blockquote>
+<p>Book{bookname='aaa', author='bbb', type='ccc', price=12, isborrowed=false}</p>
+</blockquote>
+<p><em>重写的设计原则</em><br>
+对于一个已经<code>投入使用的类</code>，就不要再对其进行修改了。而是定义一个新的类，来重复其中的<code>共性内容</code>，同时添加新的内容或功能。<br>
+一个很简单的例子，手机是有更新换代的。在这个迭代的过程中势必会有软件硬件上的更新。就像是接打电话的界面，可能在后续的系统更新里，会对这个界面进行一个升级，但是总会有用户不想升级，或者手机型号老旧无法升级，为了顾及到整体的用户体验，就不能去更改原有的<code>相关类</code>，而是选择开发一个新的类来进行重写。</p>
+<p>接下来书写booklist类。<br>
+booklist类的作用就是充当一个书架。并往里面先预放置几本书。</p>
+<pre><code class="language-java">public class Booklist {
+    Book []books =new Book[10]; //就将数量设定为10本
+    int usedsize; //目前存储书籍的本数。
+
+   public Booklist(){
+       books[0]=new Book(&quot;局外人&quot;,&quot;加缪&quot;,&quot;文学&quot;,22);
+       books[1]=new Book(&quot;人间失格&quot;,&quot;太宰治&quot;,&quot;文学&quot;,27);
+       books[2]=new Book(&quot;人生的智慧&quot;,&quot;叔本华&quot;,&quot;文学&quot;,56);
+       this.usedsize=3;
+   }
+
+    public Book[] getBooks() {
+        return books;
+    }
+
+    public void setBooks(Book[] books) {
+        this.books = books;
+    }
+
+    public int getUsedsize() {
+        return usedsize;
+    }
+
+    public void setUsedsize(int usedsize) {
+        this.usedsize = usedsize;
+    }
+
+    
+}
+</code></pre>
+<p>接下来就还有主菜单和operation包了。</p>
+<h1 id="多态与抽象类">🏐多态与抽象类</h1>
+<p>先来了解一下抽象类与多态的相关知识点。<br>
+<em>抽象类</em><br>
+在面向对象的概念里，所有的<code>对象都是通过类来描述</code>的，如果一个类<code>没有足够的信息去描述一个对象</code>，这样的类就称为<code>抽象类</code>。<br>
+例如我们现在定义一个抽象类shape，用来画图形，但是具体画什么我们不清楚，就可以写出如下代码。</p>
+<pre><code class="language-java">abstract class shape{
+    abstract void draw();
+
+    public shape() {
+    }
+}
+class cycle extends shape{
+    public cycle() {
+    }
+    public void draw(){
+        System.out.println(&quot;画一个圆&quot;);
+    }
+
+}
+class rect extends shape{
+    public rect()
+    {
+
+    }
+    public void draw(){
+        System.out.println(&quot;画一个矩形&quot;);
+    }
+}
+ public static void main(String[] args) {
+        cycle a=new cycle();
+        a.draw();
+        rect b= new rect();
+        b.draw();
+    }
+
+</code></pre>
+<p>输出<br>
+画一个圆<br>
+画一个矩形</p>
+<ul>
+<li>shape类由<code>abstract</code>修饰，代表他是一个抽象类。</li>
+<li>cycle和rect通过<code>extends关键字</code>继承了shape类，并对draw方法进行了<code>重写</code>。</li>
+<li>shape作为一个抽象类<code>必须被继承</code>，并且继承后的子类要<code>重写父类的抽象方法</code>。不然子类也会变成抽象类，需要用abstract修饰。</li>
+<li>抽象方法不可以是private修饰，抽象类shape也<code>不可以直接实例化</code>对象。</li>
+<li>抽象方法也不要用final和static修饰，抽象方法是<code>必须被重写</code>的。</li>
+<li>抽象类中可以<code>存在构造方法</code>，让子类创建对象时初始化父类成员变量。</li>
+</ul>
+<p>可以看到，<code>调用同名方法draw，却实现了不同的效果</code>，这就是<code>多态的体现</code>。同一件事发生在不同的对象，就会产生不同的结果。<br>
+多态的使用有如下条件：</p>
+<ul>
+<li>必须处于继承的条件下。</li>
+<li>子类必须对父类方法进行重写。</li>
+<li>通过父类的引用调用重写方法。</li>
+</ul>
+<p>父子类同样可以实现多态，那为何我们要采取抽象类？这不是多此一举吗？</p>
+<blockquote>
+<p>使用抽象类实则是多一层<code>编译器的校验</code>。因为就像shape类，画图的工作不需要shape类，而是其两个子类，cycle和rect。但是如果只是普通的继承，那么可能错误的去<code>调用了shape类</code>，此时编译器不会报错。而当父类shape是抽象类时，在实例化时就会报错。这些语法的存在就是为了<code>“预防出错”</code>。</p>
+</blockquote>
+<p>有了基本的知识储备就可以开始着手主菜单了。新建一个class Main。<br>
+第一步就是先初始化一个书架。</p>
+<pre><code class="language-java">public class Main {
+    Booklist booklist =new Booklist();
+}
+</code></pre>
+<p>第二步就很重要了，要写登录的代码。因为管理员和普通用户的菜单不一样，管理员会比普通用户多一些功能，例如添加图书，删除图书等，所以我们展示的菜单是不一样的。根据才介绍的多态，还需要引入一个比较重要的知识点：<br>
+<em>向上转型和向下转型</em></p>
+<pre><code class="language-java"> public static User login(){
+        System.out.println(&quot;输入姓名&quot;);
+        Scanner scanner =new Scanner(System.in);
+        String name=scanner.toString();
+        System.out.println(&quot;你是管理员(1)还是用户(0)&quot;);
+        int choice =scanner.nextInt();
+        if(choice==1)
+            return new Adminuser(name);
+        else
+            return new Regularuser(name);
+
+    }
+</code></pre>
+<p>login方法的返回类型是User，是return的adminuser与regularuser的<code>父类</code>，<code>子类转为父类</code>，这里就实现了一个<code>向上转型</code>。这样就很方便的使用一个方法就可以return两种不同的类型（但只会返回一个，只是有两种选择）。那么此时就可以在adminuser与regularuser两个类中放入不同的菜单来进行调用了。这里要介绍动态绑定的知识点。<br>
+<em>动态绑定</em></p>
+<blockquote>
+<p>动态绑定是指在执行期间（非编译期）判断所引用对象的实际类型，根据其<code>实际的类型</code>调用其相应的方法。</p>
+</blockquote>
+<p>也就是说，虽然adminuser与regularuser中的一个被向上转型成为了user类型，但实际调用的仍然是子类型，所以在调用同名方法时会<code>优先调用子类的方法</code>。所以往子类里添加相应的管理菜单即可。</p>
+<p>向下转型则是父类向子类进行转换，因为当子类转换到父类后，就不可以在使用子类的特有方法了。如果想要<code>调用子类的特有方法</code>，就需要完成<code>向下转型</code>，将父类引用重<code>新还原</code>为子类对象。</p>
+<pre><code class="language-java">Adminuser user1=(Adminuser)user;
+</code></pre>
+<p>这样就完成了向下的转型，此时user1就可以使用adminuser类里的特有方法了。<br>
+往两个类中添加菜单：<br>
+管理员类：</p>
+<pre><code class="language-java">public void menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+        System.out.println(&quot;4.添加图书&quot;);
+        System.out.println(&quot;5.删除图书&quot;);
+    }
+</code></pre>
+<p>普通用户类</p>
+<pre><code class="language-java"> public void menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+
+    }
+</code></pre>
+<p>此时还要记得将<code>menu方法添加到user类</code>中，才能正常的在子类里调用。<br>
+根据抽象类的知识，就可以将user类改为一个抽象类。</p>
+<pre><code class="language-java">public abstract class User {
+     String name;
+    public User(){
+    }
+    public abstract void menu();
+    public User(String name) {
+        this.name = name;
+        }
+        }
+</code></pre>
+<p>完善menu方法</p>
+<pre><code class="language-java"> public int menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+        System.out.println(&quot;4.添加图书&quot;);
+        System.out.println(&quot;5.删除图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        int choice =scanner.nextInt();
+        return choice;
+
+    }
+</code></pre>
+<p>记得user类和regularuser类也要进行更改！<br>
+在main类中完善代码：</p>
+<pre><code class="language-java"> public static void main(String[] args) {
+        Booklist booklist =new Booklist();
+
+        User user=login();
+        while(true) {
+            int choice = user.menu();
+        }
+    }
+</code></pre>
+<p>这样就基本完成了图书管理系统的结构。剩下的就是operation包了。</p>
+<h1 id="接口">🎱接口</h1>
+<p>operation包里放的就是上述的menu方法中的功能了。通常在书写功能时，会用到<code>接口</code>的思想。</p>
+<blockquote>
+<p>接口就是公共的行为规范标准，在java中，接口可以理解为<code>多个类</code>的公共<code>规范</code>，是一种引用数据类型。</p>
+</blockquote>
+<p>接口的定义规则如下：</p>
+<pre><code class="language-java">public interface 接口名{
+  //放抽象方法。
+}
+</code></pre>
+<ul>
+<li>接口中的成员变量默认是由<code>public static final</code>来修饰。</li>
+<li>接口中的方法默认是<code>public abstract</code>修饰。</li>
+<li>接口不可以直接使用或者实例化，而是用一个<code>实现类</code>来实现接口。</li>
+<li>子类父类是extends实现关系，而接口与类之间则是<code>implements</code>实现关系。</li>
+<li>接口中<code>不能</code>含有静态方法和构造方法。</li>
+</ul>
+<p>简单的说，就是由一个接口来规范功能的书写。<br>
+如下书写了一个简单的接口，只包含一个方法work。</p>
+<pre><code class="language-java">public interface operation {
+    void work(Booklist booklist);
+}
+</code></pre>
+<blockquote>
+<p>这个接口可以被<code>多个类</code>共同使用，同时<code>一个类</code>可以实现<code>多个接口</code>。这就是接口与继承的区别，虽然java中不支持多继承，但却支持实现多接口。</p>
+</blockquote>
+<p>例如此时我们再书写一个接口。</p>
+<pre><code class="language-java">public interface exit {
+    void exitprogress(Booklist booklist);
+}
+</code></pre>
+<p>这样exit和operation两个接口都可以被一个类接收。这样这个类就可以重写两个接口的方法。<br>
+这也是java中面向对象的常见用法：<code>一个类继承父类，同时实现多个接口</code>。<br>
+使用接口的好处在于<code>忘记类型</code>，只需要去关注某个类是否<code>具有某种能力</code>。<br>
+例如现有接口hunt</p>
+<pre><code class="language-java">public interface hunt {
+    void dowork();
+}
+</code></pre>
+<p>与一个继承于Animal的Snake类，那么可以写出如下代码：</p>
+<pre><code class="language-java">public class Snake extends Animal implements hunt{
+    public Snake(String name) {
+        super(name);
+    }
+    public static void huntanimal(hunt hunt){
+        hunt.dowork();
+    }
+
+    @Override
+    public void dowork() {
+        System.out.println(name+&quot;吃兔子&quot;);
+    }
+
+    public static void main(String[] args) {
+        Snake snake=new Snake(&quot;蛇&quot;);
+        huntanimal(snake);
+    }
+}
+</code></pre>
+<p>在调用方法huntanimal时，就无需考虑到类型的传入，只需要去关心传入对象是否具有<code>相对应的某种能力</code>了。那么自然可以重新建一个tiger类，wolf类，只要是具备hunt能力的我们都可以通过huntanimal这个方法来调用。</p>
+<p>以下摘自一位大牛：</p>
+<blockquote>
+<p>1、重要性：在Java语言中， abstract class 和interface 是支持抽象类定义的两种机制。正是由于这两种机制的存在，才赋予了Java强大的 面向对象能力。<br>
+2、简单、规范性：如果一个项目比较庞大，那么就需要一个能理清所有业务的架构师来定义一些主要的接口，这些接口不仅告诉开发人员你需要实现那些业务，而且也将命名规范限制住了（防止一些开发人员随便命名导致别的程序员无法看明白）。<br>
+3、维护、拓展性：比如你要做一个画板程序，其中里面有一个面板类，主要负责绘画功能，然后你就这样定义了这个类。  可是在不久将来，你突然发现这个类满足不了你了，然后你又要重新设计这个类，更糟糕是你可能要放弃这个类，那么其他地方可能有引用他，这样修改起来很麻烦。   如果你一开始定义一个接口，把绘制功能放在接口里，然后定义类时实现这个接口，然后你只要用这个接口去引用实现它的类就行了，以后要换的话只不过是引用另一个类而已，这样就达到维护、拓展的方便性。<br>
+4、安全、严密性：接口是实现软件松耦合的重要手段，它描叙了系统对外的所有服务，而不涉及任何具体的实现细节。这样就比较安全、严密一些（一般软件服务商考虑的比较多）。</p>
+</blockquote>
+<p>先实现查找图书类。<br>
+往booklist里新添加了一个方法getpos，返回i下标的book类。</p>
+<pre><code class="language-java">  public Book getPos(int i){
+       return books[i];
+    }
+</code></pre>
+<p>实现查找图书的方法work。</p>
+<pre><code class="language-java">public class findbook implements operation {
+    public  void work(Booklist booklist) {
+        System.out.println(&quot;请输入需要查找的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize=booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+                System.out.println(&quot;找到了&quot;);
+                System.out.println(&quot;book&quot;);
+                return;
+            }
+        }
+        System.out.println(&quot;没找到&quot;);
+
+    }
+}
+</code></pre>
+<p>接下来是添加图书功能。<br>
+先修改booklist里的setbook方法(之前是使用idea自动生成的，但和我们想要的功能有差异，就重写了)</p>
+<pre><code class="language-java"> public void setBooks(Book book,int pos) {
+        books[pos]=book;
+    }
+</code></pre>
+<p>实现添加图书的work方法</p>
+<pre><code class="language-java">public class addbook implements operation{
+    @Override
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要添加的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        System.out.println(&quot;请输入图书作者&quot;);
+        String bookauthor=scanner.nextLine();
+        System.out.println(&quot;请输入图书类型&quot;);
+        String booktype=scanner.nextLine();
+        System.out.println(&quot;请输入图书价格&quot;);
+        int bookprice=scanner.nextInt();
+        Book book =new Book(bookname,bookauthor,booktype,bookprice);
+        int currentsize=booklist.getUsedsize();
+        booklist.setBooks(book,currentsize);
+        booklist.setUsedsize(currentsize+1);
+
+    }
+}
+
+</code></pre>
+<p>实现删除的方法</p>
+<pre><code class="language-java">public class deletebook implements operation{
+   @Override
+   public void work(Booklist booklist) {
+       System.out.println(&quot;请输入要删除的图书&quot;);
+       Scanner scanner=new Scanner(System.in);
+       String bookname=scanner.nextLine();
+       int currentsize= booklist.getUsedsize();
+       int index=-1;
+       for (int i = 0; i &lt;currentsize ; i++) {
+           Book book=booklist.getPos(i);
+           if(bookname.equals(book.getBookname())){
+               index=i;
+               break;
+           }
+       }
+       if(index==-1)
+           System.out.println(&quot; 未找到图书&quot;);
+   }
+}
+
+</code></pre>
+<p>借书和归还则写的简单些。只需要将isborrowed进行修改即代表借出与归还两种状态。</p>
+<pre><code class="language-java">//借书，注意要放入两个文件中，一个文件只能有一个public修饰的类。
+public class borrowbook implements operation{
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要借阅的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize= booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+               book.setIsborrowed(true);
+            }
+        }
+        
+    }
+}
+//还书
+public class returnbook implements operati{
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要归还的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize= booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+                book.setIsborrowed(false);
+            }
+        }
+
+    }
+}
+</code></pre>
+<p>退出系统</p>
+<pre><code class="language-java">public class exitsystem implements  operation{
+    @Override
+    public void work(Booklist booklist) {
+        System.out.println(&quot;退出系统&quot;);
+        System.exit(0);
+    }
+}
+
+</code></pre>
+<p>以上就简单将功能都实现了一遍，可以看到，在实现功能时，getter and setter方法的书写是非常重要的，我们经常会用到单个的成员变量，通过getter and setter来调用是非常方便且具有可读性的。</p>
+<p>整个图书管理系统还差最关键的一步，<code>通过菜单来调用对应的方法</code>。这点我们会用到<code>接口数组</code>的思想。<br>
+简单的说，就是让<code>对象存储自己的操作</code>。虽然操作功能的类型各不相同，但都实现了operation接口，那么就可以让<code>实现了这个接口的类</code>都存到这个数组中去。<br>
+先在user类里添加一个接口数组，但不对其进行初始化，因为此时不知道具体大小(<code>两个子类的菜单数是不同的</code>)。</p>
+<pre><code class="language-java"> protected operation[] op;
+ public void dooperation(int choice, Booklist booklist){
+        op[choice].work(booklist);
+    }
+</code></pre>
+<p>而且不可以跳过user类直接在两个子类中一气呵成初始化数组，因为Main类里是user类在调用方法，如果user类<code>不存在</code>调用这个数组的方法，编译器会报错。<br>
+在adminuser和regularuser两个类的<code>构造方法</code>对数组进行初始化。</p>
+<pre><code class="language-java">//在这里就一起给出了
+ public Adminuser(String name) {
+        super(name);
+        this.op=new operation[]{
+                new exitsystem(),
+                new borrowbook(),
+                new returnbook(),
+                new findbook(),
+                new addbook(),
+                new deletebook()
+        };
+    }
+      public Regularuser(String name) {
+        super(name);
+        this.op=new operation[]{
+                new exitsystem(),
+                new borrowbook(),
+                new returnbook(),
+                new findbook()
+        };
+</code></pre>
+<p>接着写在Main类里面的主函数：</p>
+<pre><code class="language-java"> while(true) {
+            int choice = user.menu();
+            user.dooperation(choice,booklist);
+        }
+</code></pre>
+<p>整个简易的图书管理系统就做好了。</p>
+]]></content>
+    </entry>
+</feed>
