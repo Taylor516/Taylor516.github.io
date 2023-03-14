@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://taylor516.github.io/</id>
+    <title>chengzi </title>
+    <updated>2023-03-14T02:10:29.626Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://taylor516.github.io/"/>
+    <link rel="self" href="https://taylor516.github.io/atom.xml"/>
+    <subtitle>一个程序员能造成多大的impact，取决于他的代码影响力。</subtitle>
+    <logo>https://taylor516.github.io/images/avatar.png</logo>
+    <icon>https://taylor516.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2023, chengzi </rights>
+    <entry>
+        <title type="html"><![CDATA[【算法】双指针巧解判断链表是否有环的问题]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/">
+        </link>
+        <updated>2023-03-09T11:29:52.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】快速排序，归并排序，两种二分的模板干货讲解，附带边界问题的分析。]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/">
+        </link>
+        <updated>2023-03-07T14:32:08.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【c】简述内存中数据如何存储？动态内存该如何分配？]]></title>
+        <id>https://taylor516.github.io/post/chengzi-c-memory alloction/</id>
+        <link href="https://taylor516.github.io/post/chengzi-c-memory alloction/">
+        </link>
+        <updated>2023-03-03T01:55:42.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？]]></title>
+        <id>https://taylor516.github.io/post/chengzi-c-stackframe/</id>
+        <link href="https://taylor516.github.io/post/chengzi-c-stackframe/">
+        </link>
+        <updated>2023-03-01T12:25:20.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【c】关于指针，你应该知道这些]]></title>
+        <id>https://taylor516.github.io/post/chengzi-c-pointer/</id>
+        <link href="https://taylor516.github.io/post/chengzi-c-pointer/">
+        </link>
+        <updated>2023-03-01T11:59:25.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【java】以简单的图书管理系统讲清楚类，对象，继承，多态与接口的相关知识点]]></title>
+        <id>https://taylor516.github.io/post/chengzi-java-Classes and objects/</id>
+        <link href="https://taylor516.github.io/post/chengzi-java-Classes and objects/">
+        </link>
+        <updated>2023-03-01T11:42:17.000Z</updated>
+    </entry>
+</feed>
