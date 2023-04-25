@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【c++】相较于c，c++是如何支持重载的？ | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【c++】相较于c，c++是如何支持重载的？</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>在c++中，存在一种用法，名叫<code>函数重载</code>，函数重载是C++中一个非常重要的特性，它允许程序员定义<code>同名</code>但<code>参数列表不同</code>的函数，这样可以方便地实现代码复用和提高程序的可读性。但在c的学习过程中，我却从未见过这样的用法，所以写了如下的一篇博客，记录c++为何支持重载的原因。</p>
+</blockquote>
+<h1 id="函数重载">🐶函数重载</h1>
+<p>函数重载指的是在同一个作用域内，可以定义多个同名但参数列表不同的函数。例如：<br>
+如下是两个同名的add函数，功能是将两数相加并返回。</p>
+<pre><code class="language-c++">int add(int a, int b) {
+    return a + b;
+}
+double add(double a, double b) {
+    return a + b;
+}
+</code></pre>
+<p>虽然都是add，但是它们的<code>参数列表不同</code>，一个是两个整数，一个是两个浮点数。当调用add函数时，编译器会根据实参的类型和数量来选择调用哪一个函数。例如：</p>
+<pre><code class="language-c++">int x = add(1, 2);         // 调用int add(int, int)
+double y = add(1.0, 2.0);  // 调用double add(double, double)
+</code></pre>
+<p>这就是函数重载。函数重载的好处在于，可以让程序员使用同一个名字来表示多个不同的操作，这样可以提高程序的可读性和可维护性。</p>
+<h1 id="c为何支持函数重载">🐭c++为何支持函数重载</h1>
+<p>在c/c++中，要想将一个程序跑起来，就需要经过如下的几个阶段（合起来就被称为<code>编译</code>）:</p>
+<blockquote>
+<p>预处理，编译，汇编，链接</p>
+</blockquote>
+<p><code>预处理</code>是C++程序在编译过程中的第一步，它主要负责处理头文件、宏定义和条件编译等。在预处理阶段，预处理器会对<code>函数的声明</code>进行处理，通常，此文件是以<code>.i</code>为后缀。</p>
+<p>编译器在<code>编译</code>阶段主要负责将源代码翻译成<code>汇编</code>代码。编译器通过分析源代码，将其转换为计算机可以理解的指令。汇编语言程序中的每条语句都以一种标准的文本格式确切的描述了一条低级机器语言指令。此时，文件后缀为<code>.s</code>。</p>
+<p>在<code>汇编</code>阶段，编译器会将<code>汇编</code>代码翻译成<code>机器</code>代码。汇编器将<code>.s文件</code>翻译成机器语言指令，把这些指令打包成一种可重定位目标程序的格式，并将结果保存在目标文件<code>.o</code>中。<code>.o</code>文件是一个二进制文件，它的字节编码是机器语言指令而不是字符，如果我们在文本文件中打开<code>.o文件</code>，所呈现的就是一串串的乱码。在汇编阶段，会生成一份<code>符号表</code>。</p>
+<p>在<code>链接</code>阶段，编译器会将多个目标文件链接成一个可执行文件。</p>
+<p>c++存在<code>函数名修饰</code>规则，而c没有，这就是c++可以实现重载的关键。<br>
+规则规定：在 C++ 中，为了支持函数重载，编译器会对每个<code>函数名</code>进行<code>修饰</code>，从而生成<code>唯一的符号</code>来标识该函数。函数名修饰规则是由编译器定义的，不同的编译器可能会采用不同的修饰规则。Microsoft Visual C++ 编译器将函数名后面加上下划线和参数个数，参数类型和参数个数之间用 @ 分隔。例如，函数 void foo(int a, float b) 的修饰名为 _foo@8。</p>
+<p>规则的体现就在<code>汇编</code>阶段。在汇编阶段，会生成一份符号表，这份符号表将会记录函数的<code>名称</code>与<code>地址</code>。</p>
+<ul>
+<li>若无函数名修饰规则，那么编译器只根据原始函数名来生成放在符号表中的函数名；如果有修饰规则，那么会将<code>形参个数，类型，顺序</code>也添加进考虑范围，以形成新的函数名。</li>
+</ul>
+<p>需要注意的是，在编译的过程中，是不会执行用户的自定义函数的。<br>
+在链接的阶段，链接器会解析<code>所有的符号</code>，并将被调用的函数的目标代码包含在可执行文件中。当我们在一个源文件中定义一个函数时，编译器会将该函数编译成目标代码，并在生成的目标文件中生成相应的符号。如果在其他源文件中<code>调用</code>了该函数，链接器会在链接阶段将相应的目标文件合并成一个可执行文件，并将<code>各个符号解析成实际的地址</code>，从而使得程序能够正确地执行。</p>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-04-22</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/oQJc9q4Ck/" title="c/c++">c/c++ </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/EEDnMXrLL/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/j83dAH6PE/" title=" 【c++】c++支持的引用和c中的指针孰胜孰劣？">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

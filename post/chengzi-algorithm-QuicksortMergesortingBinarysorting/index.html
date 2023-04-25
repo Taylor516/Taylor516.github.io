@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【算法】快速排序，归并排序，两种二分的模板干货讲解，附带边界问题的分析。 | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【算法】快速排序，归并排序，两种二分的模板干货讲解，附带边界问题的分析。</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>前言：本篇内容会总结快速排序与归并排序两种常见的排序以及整数二分，浮点数二分，并给出相应的模板代码与示例题目。在代码的讲解过程中也会附带讲解让人头疼的边界问题，到底如何划分区间，划分后又该如何设定参数。</p>
+</blockquote>
+<h1 id="快速排序">📣快速排序</h1>
+<h2 id="基本思想">🥗 基本思想</h2>
+<p>快速排序的中心思想就是<code>分治算法</code>。其操作过程就是在区间上选定一个值，然后排序整个数组，使得<code>值左边的都小于它，右边的都大于它</code>，然后整个数组就被分成了两段，分治的思想就体现在这里，分别在左右两个数组里取一个值，又继续上述的操作，直到只剩一个数。<br>
+比如给出一个数组<br>
+{1,3,6,4,7,8,9,3,4}<br>
+我们以（左边界+右边界&gt;&gt;1）为每次确定的值的下标，那么取到的第一个值就是7，我们需要进行的操作就是将比7大的排到7右边，比7小的排到7左边。‘<br>
+可以得到如下结果<br>
+{1,3,6,4,3,4}{7}{8,9}<br>
+此时7就被放到了最合适的位置，只需要分别排序左右两个数组即可。<br>
+上述的便是快排的基础思想。最初的快排是由hoare提出的，经由后人的不断优化有了多种的版本。<br>
+<img src='https://imgbed.link/file/21637'></p>
+<h2 id="hoare版快排">🍌hoare版快排</h2>
+<p>在开篇时谈到其中心思想是分治，需要找到区间中的一个值来作为分隔两边的界限，如何去寻找这个值呢？<br>
+有一种明显可以降低复杂度的方法叫<code>三数取中</code>，也就是在三个数里取出一个<code>处在中间的值</code>，用此数来作为划分的值。这种算法相较于直接取<code>中间</code>，或者<code>左右两边</code>会有明显的提升。</p>
+<pre><code class="language-c">int GetMidNumi(int* a, int left, int right)
+{
+	int mid = (left + right) / 2;
+	if (a[left] &lt; a[mid])
+	{
+		if (a[mid] &lt; a[right])
+		{
+			return mid;
+		}
+		else if (a[left] &gt; a[right])
+		{
+			return left;
+		}
+		else
+		{
+			return right;
+		}
+	}
+	else // a[left] &gt; a[mid]
+	{
+		if (a[mid] &gt; a[right])
+		{
+			return mid;
+		}
+		else if (a[left] &lt; a[right])
+		{
+			return left;
+		}
+		else
+		{
+			return right;
+		}
+	}
+}
+
+</code></pre>
+<p>找到了区分界限的值，就可以逐步的进行分治了。</p>
+<pre><code class="language-c">int quickSort(int* a, int left, int right) {
+	if (left &gt;= right)
+			return;
+		
+	int begin = left, end = right;
+	// 三数取中
+	int midi = GetMidNumi(a, left, right);
+	if (midi != left)
+		Swap(&amp;a[midi], &amp;a[left]);
+
+	int keyi = left;
+	while (left &lt; right)
+	{
+		while (left &lt; right &amp;&amp; a[right] &gt;= a[keyi])
+			--right;
+		while (left &lt; right &amp;&amp; a[left] &lt;= a[keyi])
+			++left;
+
+		Swap(&amp;a[left], &amp;a[right]);
+	}
+
+	Swap(&amp;a[keyi], &amp;a[left]);
+	QuickSort1(a, begin, keyi - 1);
+	QuickSort1(a, keyi+1, end);
+}
+
+</code></pre>
+<p>上述代码还有一个非常重要的点，那就是<code>当左边的值做key时，右边先走，可以保证相遇位置的值比key要小</code>,这一点可以自行佐证.<br>
+同理,<code>当右边的值做key时，左边先走，可以保证相遇位置的值比key要大</code>.<br>
+上述的方法是hoare的基础版本,经过了一些小优化所得到的,其中很多地方都蕴含着坑,只要稍微写错了一点都会引发bug.</p>
+<h2 id="改良的算法模板">🌯改良的算法模板</h2>
+<p>我个人更推荐采用如下的算法模板，直接取中，显得更加简洁,且更易记住,多写几遍即可。</p>
+<pre><code class="language-c">void quick_sort(int* arr, int l, int r) {
+ if(l&gt;=r)
+ return;
+ int i=l-1;
+ int j=r+1;
+ int x=arr[(l+r&gt;&gt;1)];
+ while(i&lt;j){
+     do{i++;}while(arr[i]&lt;x);
+     do{j--;}while(arr[j]&gt;x);
+     if(i&lt;j)
+     {
+         int tmp=arr[i];
+         arr[i]=arr[j];
+         arr[j]=tmp;
+     }
+     
+}
+quick_sort(arr,l,j);
+     quick_sort(arr,j+1,r);
+}
+</code></pre>
+<p>参数部分的arr代表传入的数组，l与r则是数组的两个边界下标。<br>
+在快速排序的过程中最核心的部分也就是排序的部分。在这里我采取的是左右指针的方式。<br>
+如上，我定义了两个指针i与j，当i所指向的那个数比选取值要大时，则停下来，要小也就是符合要求就一直往后走，j则是同理，两个指针的本质都是在<code>筛选不符合要求的值</code>。<br>
+但上述的写法在进行筛选时可能某一趟无法实现让选取值的两边都完全符合要求，但即便如此在接下来的趟数中会进行逐步的纠正。上述模板是方便记忆的一个<code>最优解</code>。<br>
+当然，如果忘记了如何调整，也可使用开辟新数组的方式，或者<code>挖坑法</code>。<br>
+<img src='https://imgbed.link/file/21640'><br>
+此处就不再展示挖坑的代码，感兴趣的可以自行写或者百度。<br>
+同时，因为使用的是do while结构，所以定义i与j时选择<code>各自往两边靠一位</code>。</p>
+<h2 id="关于边界问题的一些分析">🍣关于边界问题的一些分析</h2>
+<p>在使用快速排序时，需要额外的注意边界的划分问题，其核心在于是否会<code>死循环</code>。<br>
+判断是否死循环也十分简单，在不断的递归中，l与r不断变化，若在参数为（arr，l，r）的函数递归中再次出现了（arr，l，r），很明显，这样就会造成死循环。</p>
+<p>先来看边界是如何确定的。快速排序的方法核心在于分治，也就是将序列划分为<code>左部分小于等于x，右部分大于等于x</code>，那么对于i而言，i左边的数都是必定小于等于x，且j右边的数必定大于等于x，那么就可划分为以下两种情况：</p>
+<pre><code class="language-c">quick_sort(l,i-1) ,quick_sort(i,r)
+quick_sort(l,j) ,quick_sort(j+1,r)
+</code></pre>
+<p><em>也就是arr[i]不能保证小于等于x，但i-1可以，arr[j]不可以保证大于等于x，但j+1可以。</em><br>
+此时对于x的选择就会造成某些死循环。</p>
+<blockquote>
+<p>当x=arr[l]<br>
+例如数组里只有1，2，在一轮循环之后会使得<code>i=l</code>，此时进行递归会得到sort(l,i-1),sort(i,r)，你会发现sort(i,r)是等价于sort(l,r)的，那么必然会发生死循环。</p>
+</blockquote>
+<blockquote>
+<p>当x=arr[r]<br>
+例如数组里只有1，2，在一轮循环之后会使得<code>j=r</code>，此时进行递归会得到sort(l,j),sort(j+1,r)，你会发现sort(l,j)是等价于sort(l,r)的，那么必然会发生死循环。</p>
+</blockquote>
+<p>还可以考虑一下x=arr[l+r&gt;&gt;1]的情况，此时的arr<code>是向下取整的</code>，那么还是使用1，2的例子，其等价于当x=arr[l]这种情况了。</p>
+<p>所以我们可以总结这样的规律：</p>
+<blockquote>
+<p>如果x=arr[l] or x=arr[l+r&gt;&gt;1]，此时只可以使用sort(l,j),sort(j+1,r)<br>
+如果x=arr[r],此时就只可以使用sort(l,i-1),sort(i,r)</p>
+</blockquote>
+<p>一定要熟记上面的规律。</p>
+<h2 id="非递归实现快排">🍰非递归实现快排</h2>
+<p>还有一种快速排序,是<code>非递归</code>的形式来实现的。为什么在这里要提一下非递归呢，因为不管是什么递归，都是<code>存在缺陷</code>的。如果递归的<code>深度过深</code>，就会造成<code>栈溢出</code>的情况。所以我们可能会遇到将递归转换为非递归的情况。快排的非递归可以借助<code>栈</code>来实现，先将<code>right和left</code>一起入栈，然后弹出，<code>先后</code>入<code>右左</code>两个区间的值，入栈和出栈的顺序非常重要，一定要考虑清楚，是先排序左边还是先排序右边。若是要先排序<code>左边</code>，那就要先入<code>右边</code>，因为栈遵循着<code>先入后出</code>的原则。</p>
+<pre><code class="language-c">typedef struct stack
+{
+	int* arr;
+	int size;
+	int capacity;
+}st;
+void stackinit(st* q) {
+	q-&gt;arr = (int*)malloc(sizeof(int) * 4);
+	q-&gt;size = 0;
+	q-&gt;capacity = 4;
+}
+void stackpush(st* q, int x) {
+	if (q-&gt;capacity == q-&gt;size) {
+		int* new = (int*)realloc(q-&gt;arr, q-&gt;capacity * 2);
+		if (new == NULL)
+			perror(&quot;realloc fail\n&quot;);
+		q-&gt;arr = new;
+		q-&gt;capacity *= 2;
+	}
+	q-&gt;arr[q-&gt;size++] = x;
+
+}
+//弹出时顺便取得这个值
+int stackpop(st* q) {
+	assert(q);
+	assert(q-&gt;size != 0);
+	return q-&gt;arr[--q-&gt;size];
+}
+bool stackisempty(st* p) {
+	return p-&gt;size == 0;
+}
+int _quicksort(int* a,int left,int right) {
+	if (left &gt;= right)
+		return;
+	int key = a[left + right &gt;&gt; 1];
+	int l = left - 1;
+	int r = right + 1;
+	while (l &lt; r) {
+		do { l++; } while (a[l] &lt; key);
+		do { r--; } while (a[r] &gt; key);
+		if (l &lt; r)
+			swap(&amp;a[l], &amp;a[r]);
+	}
+	return r;
+}
+
+
+void quicksortnonr(int* a,int left,int right) {
+	st s;
+	stackinit(&amp;s);
+	stackpush(&amp;s, right);
+	stackpush(&amp;s, left);
+	while (!stackisempty(&amp;s)) {
+		int begin = stackpop(&amp;s);
+		int end = stackpop(&amp;s);
+		int key = _quicksort(a, begin, end);
+		if (key + 1 &lt; end) {
+			stackpush(&amp;s, end);
+			stackpush(&amp;s,key+1 );
+		}
+		if (begin + 1 &lt; key) {
+			stackpush(&amp;s, key-1);
+			stackpush(&amp;s, begin);
+		}
+
+	}
+}
+</code></pre>
+<p>注意，在 _quicksort函数中<code>返回的值</code>非常重要，与下面的quicksortnonr函数中的stackpush是有联系的！因为我的模版是分为（left，r）与（r+1，right），所以我返回的是r。一定不要忽略这些细节，边界的控制在这里显得尤其重要。</p>
+<h1 id="归并排序">🔔归并排序</h1>
+<h2 id="模版">💻模版</h2>
+<p>归并排序的思想也是<code>分治</code>。<br>
+先取一个分界点，再将这个数组以分界点分为两个数组，不断重复直到<code>不可分</code>，第三步，对两个数组分别进行排序，不断的向上拼接。<br>
+当然，当数组只有一个数就直接返回即可，因为此时不需要进行排序。<br>
+归并，字面意思理解就是<code>合二为一</code>，不断的通过递归，将<code>数组进行拆解</code>，再不断通过返回，将有序数组的长度越拼接越大(拼接的时候也要将两个有序数组排序)，直到拼完整个数组。<br>
+<img src='https://imgbed.link/file/21638'><br>
+其时间复杂度为<code>O(n*logn)</code>，因为其递归的深度为logn，每一层都要将n个数进行排序。<br>
+假设需要排序的数组有<code>8个元素</code>，那么只需要递归<code>三层</code>即可，因为三层会被分为4组，每组两个，两两排序，就会组成最小的四个有序数组，再往上返回进行拼接即可，且每一层8个数都会进行排序。<br>
+其模板如下：</p>
+<pre><code class="language-c">void mergesort(int* arr,int l,int r){
+    if(l&gt;=r)
+    return;
+    int mid=(l+r&gt;&gt;1);
+    mergesort(arr,l,mid);
+    mergesort(arr,mid+1,r);
+    int tmp[100000];
+    int i=l;
+    int j=mid+1;
+    int k=0;
+    while(i&lt;=mid&amp;&amp;j&lt;=r){
+        if(arr[i]&gt;arr[j]){
+            tmp[k++]=arr[j++];
+            
+        }else{
+            tmp[k++]=arr[i++];
+        }
+    }
+    while(i&lt;=mid) tmp[k++]=arr[i++];
+    while(j&lt;=r) tmp[k++]=arr[j++];
+    for(int i=l,k=0;i&lt;=r;i++,k++){
+        arr[i]=tmp[k];
+    }
+}
+</code></pre>
+<p>在排序的过程中，这里使用的方法是<code>开辟新数组</code>，分别用<code>两个指针</code>指向要拼接的小数组，不断进行比较，取出更小的放到新数组中。<br>
+当然，别忘了将排序好的新数组再依次放回原数组中去。<br>
+归并排序也是要考虑到<code>边界问题</code>的。<br>
+和快速排序是一个道理，因为mid的值是<code>向下取整</code>的，所以<code>mid可能会取到l</code>（可以再想想只有两个数的数组的例子）,那么如果划分为（l，mid-1）与（mid，r），也会出现（mid，r）等价于（l，r）的死循环了。<br>
+但是如果使用<code>mid</code>作为分割的位置，也就是（l，mid）与（mid+1，r），因为mid向下取整，所以再怎样<code>都不会取到r</code>，如果数组中只有一个数也是直接返回，不会造成死循环。</p>
+<p>边界划分的问题大多都可以这样思考，可以规避掉很多的问题。</p>
+<h2 id="归并排序的非递归写法">😍归并排序的非递归写法</h2>
+<p>归并排序其实就是在不断的将数组<code>折半处理</code>，那么直接用循环就可以解决问题。只是当数组为奇数个时，就需要对循环中的一些值进行修正即可。<br>
+同时，这里选择的非递归循环是从<code>底层</code>进行的，意思就是，先将两个两个的进行排序，再排四个四个的·····，直到排序完整个数组。</p>
+<pre><code class="language-c">//使用非递归来实现归并排序
+void mergesortnonr(int* a, int numsize) {
+	/*mergesort(a, left, mid);
+	mergesort(a, mid + 1, right);*/
+	int gap = 1;
+	while (gap &lt; numsize) {
+		for (int q = 0; q &lt;numsize; q += 2 * gap) {
+			int begin = q;//记录一下此时的数组开始下标
+			int i = q;
+			int j= q + gap;
+			int iend=q+gap-1;
+			int jend = q + 2 * gap - 1;  //jend就是此时数组的结束下标
+			//对越界的情况进行一个修正
+			if (iend &gt;= numsize || j &gt;= numsize) //iend越过了数组边界或者j越过了数组边界，二者是一种情况
+			{
+				break;
+			}
+
+			if (jend &gt;= numsize)  //jend越过了数组边界
+			{
+			  	jend = numsize - 1;   //手动修正到边界上来
+			}
+			//开辟一个新数组来进行排序
+			int tmp[1000];
+			int k = 0; //k是他的下标
+			
+			while (i &lt;= iend &amp;&amp; j &lt;= jend) {
+				if (a[i] &gt; a[j])
+					tmp[k++] = a[j++];
+				else
+					tmp[k++] = a[i++];
+			}
+			//处理可能剩下来的两个数组中的一个
+			while (i &lt;= iend) tmp[k++] = a[i++];
+			while (j &lt;= jend) tmp[k++] = a[j++];
+			//进行拷贝
+			for (int i =begin , k = 0; i &lt;= jend; i++, k++) {  //i必须等于l，因为是从l开始拷贝，而不是0
+				a[i] = tmp[k];
+			}
+		}
+		gap *= 2;
+	}
+}
+</code></pre>
+<p>这里用到了<code>gap</code>来表示当前排序的个数，从1开始，不断的乘以2即可。同时，在这里放弃了mid的写法，因为在递归写法中，right是已知的，在不断的建立的<code>栈帧</code>中传递的就是right和left的值，但是当我们放弃了递归，那就意味着<code>right的值将不再可以存储</code>，所以我就直接新增了iend与jend作为i与j的结束。<br>
+还有一点就是函数的修正，不断的乘以2下势必会造成越界的情况，那么可以分为两种越界情况：</p>
+<ol>
+<li>iend越界与j越界，这两种可以归为一种，因为不管是里面的哪一种，都代表此时<code>不需要进行两个区间的归并</code>。</li>
+<li>jend越界，直接将jend置为数组的<code>最大下标</code>即可。</li>
+</ol>
+<h2 id="利用归并排序求逆序对的数量">🤠利用归并排序求逆序对的数量</h2>
+<p>这是一道很经典的题。<br>
+给定一个长度为 n的整数数列，请你计算数列中的逆序对的数量。<br>
+逆序对的定义如下：对于数列的第 i个和第 j个元素，如果满足 i&lt;j且 a[i]&gt;a[j]，则其为一个逆序对；否则不是。</p>
+<p>输入格式<br>
+第一行包含整数 n，表示数列的长度。</p>
+<p>第二行包含 n个整数，表示整个数列。</p>
+<p>输出格式<br>
+输出一个整数，表示逆序对的个数。</p>
+<p>数据范围<br>
+1≤n≤100000<br>
+数列中的元素的取值范围 [1,109]</p>
+<p>输入样例：<br>
+6<br>
+2 3 4 5 6 1<br>
+输出样例：<br>
+5</p>
+<h1 id="二分">🔊二分</h1>
+<h2 id="整数的二分">🔳整数的二分</h2>
+<p>二分的核心思想在于对数组或者一段范围找到一个合理的<code>判断条件</code>，可以将其<code>划分为两个区域</code>。<br>
+例如给定一个<code>有序</code>的整数数组，我们需要寻找其中是否有4这个数字，那么给定的判断条件就可以是x&gt;=4或者x&lt;=4.<br>
+先假设取得的值为mid=（l+r/2），那么可以得到下图的推断。<br>
+我们需要寻找的值就是蓝色的最右边，红色的最左边。<br>
+<img src='https://imgbed.link/file/18079'><br>
+在此基础上不断的进行二分，缩小数组的查找区间。这就是二分的基本思路。<br>
+以下是给出的代码模板。</p>
+<pre><code class="language-c++">bool check(int x) {/* ... */} // 检查x是否满足某种性质
+
+// 区间[l, r]被划分成[l, mid]和[mid + 1, r]时使用：
+int bsearch_1(int l, int r)
+{
+    while (l &lt; r)
+    {
+        int mid = l + r &gt;&gt; 1;
+        if (check(mid)) r = mid;    // check()判断mid是否满足性质
+        else l = mid + 1;
+    }
+    return l;
+}
+// 区间[l, r]被划分成[l, mid - 1]和[mid, r]时使用：
+int bsearch_2(int l, int r)
+{
+    while (l &lt; r)
+    {
+        int mid = l + r + 1 &gt;&gt; 1;
+        if (check(mid)) l = mid;
+        else r = mid - 1;
+    }
+    return l;
+}
+
+</code></pre>
+<p>代码中给出的两个二分查找也就分别对应了<code>蓝色与红色</code>的两种划分。<br>
+当区间被划分为（l，mid-1）与（mid，r）时，由于mid存在向下取整的情况，所以mid可能<code>会取到l</code>，造成<code>死循环</code>，那么此时解决的办法就是将<code>mid+1</code>，就可以规避死循环。<br>
+也就是        int mid = l + r + 1 &gt;&gt; 1;</p>
+<h3 id="数的范围">🤡数的范围</h3>
+<p>给定一个按照升序排列的长度为 n的整数数组，以及 q 个查询。<br>
+对于每个查询，返回一个元素 k的起始位置和终止位置（位置从 0开始计数）。<br>
+如果数组中不存在该元素，则返回 -1 -1。<br>
+输入格式<br>
+第一行包含整数 n和 q，表示数组长度和询问个数。</p>
+<p>第二行包含 n个整数（均在 1∼10000范围内），表示完整数组。<br>
+接下来 q行，每行包含一个整数 k，表示一个询问元素。</p>
+<p>输出格式<br>
+共 q行，每行包含两个整数，表示所求元素的起始位置和终止位置。</p>
+<p>如果数组中不存在该元素，则返回 -1 -1。</p>
+<p>数据范围<br>
+1≤n≤100000</p>
+<p>1≤q≤10000</p>
+<p>1≤k≤10000<br>
+输入样例：<br>
+6 3<br>
+1 2 2 3 3 4<br>
+3<br>
+4<br>
+5<br>
+输出样例：<br>
+3 4<br>
+5 5<br>
+-1 -1</p>
+<p>本题的核心思想就是寻找<code>特定数字的起始与终止坐标</code>，那么就需要利用到上面讲的两种区间了，蓝色的可以找到终止，红色的可以找到起始。不要将二分只是局限于寻找一个值，你可以利用check函数寻找到满足某个条件的<code>临界点</code>。<br>
+代码如下：</p>
+<pre><code class="language-c">#include&lt;stdio.h&gt;
+int check1(int *arr,int num,int q){
+    if(arr[num]&gt;=q)
+    return 1;
+    else
+    return 0;
+}
+int check2(int* arr,int num,int q){
+    if(arr[num]&lt;=q)
+    return 1;
+    else
+    return 0;
+}
+int binerysearch1(int q,int* arr,int l,int r){
+   
+    while(l&lt;r){
+    int mid=(l+r&gt;&gt;1);
+    if(check1(arr,mid,q)) r=mid;
+    else l=mid+1;}
+    if(arr[l]==q)
+     return l;
+     else
+     return -1;
+}
+int binerysearch2(int q,int*arr,int l,int r){
+    
+
+   while(l&lt;r){
+    int mid=(l+r+1&gt;&gt;1);
+    if(check2(arr,mid,q)) l=mid;
+    else r=mid-1;}
+    if(arr[l]==q)
+      return l;
+    else
+      return -1;
+}
+</code></pre>
+<h2 id="浮点数二分">😎浮点数二分</h2>
+<p>浮点数的二分相较之下就要简单很多了。<br>
+只要r与l的差距<code>足够小</code>，就可以认为这是我们想要的值了。<br>
+其模板如下：</p>
+<pre><code class="language-c++">bool check(double x) {/* ... */} // 检查x是否满足某种性质
+
+double bsearch_3(double l, double r)
+{
+    const double eps = 1e-6;   // eps 表示精度，取决于题目对精度的要求
+    while (r - l &gt; eps)
+    {
+        double mid = (l + r) / 2;
+        if (check(mid)) r = mid;
+        else l = mid;
+    }
+    return l;
+}
+</code></pre>
+<p>浮点数的二分可以用来求一个数的<code>三次方根</code>，计算机对于浮点数的存储本来就不会特别精确，所以只需要将其误差控制在1e-6就可以啦。<br>
+给出一种写法：</p>
+<pre><code class="language-c">int check(double num,double mid){
+    if(mid*mid*mid&gt;=num){
+        return 1;
+    }else
+    return 0;
+}
+void binerysearch(double num,double a,double b){
+     double eps=1e-6;
+     double mid=0.0;
+     while(b-a&gt;=eps){
+          mid=(a+b)/2;
+         if(check(num,mid)) b=mid;
+         else a=mid;
+     }
+     printf(&quot;%.6lf&quot;,mid);
+}
+int main(){
+    double num=0;
+    scanf(&quot;%lf&quot;,&amp;num);
+    binerysearch(num ,-10000.00,10000.00);
+}
+</code></pre>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-07</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/A79l9na2y/" title="数据结构与算法">数据结构与算法 </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/" title="【leetcode】双指针巧解判断链表是否有环的问题">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-c-memory alloction/" title=" 【c】简述内存中数据如何存储？动态内存该如何分配？">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

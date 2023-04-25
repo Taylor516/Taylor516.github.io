@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【算法】二叉树里的层序遍历与完全二叉树的判断 | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【算法】二叉树里的层序遍历与完全二叉树的判断</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>本篇文章主要是填上一篇的层序遍历的坑，具体的讲解层序遍历的代码实现与完全二叉树的判断。</p>
+</blockquote>
+<h1 id="思想">💿思想</h1>
+<p>在之前就已经提到过，层序遍历就是<code>一层一层</code>的按顺序遍历，也是几种遍历中最简单明了的，但其实现相比于前序中序这种巧用<code>递归</code>思想的在代码书写中却要复杂不少。<br>
+给出一棵树：<br>
+<img src='https://imgbed.link/file/21263'><br>
+我采取的办法是建立一个<code>队列</code>，然后将<code>根节点</code>进行入队，此时队伍里就只有根节点，将根节点出队，同时将其<code>两个孩子</code>按顺序入队。<br>
+之后要执行的操作就是不断的进行<code>出队</code>,在出队的同时将出队元素的<code>两个孩子</code>进行入队，当<code>队列为空</code>后，整个出队的顺序就是层序遍历的顺序了。<br>
+<img src='https://imgbed.link/file/21264'></p>
+<h1 id="队的函数">📀队的函数</h1>
+<p>既然要入队，首先肯定是建立一个队列的结构及其功能的实现。<br>
+在上述的思想中，我们肯定会用到初始化队列，入队，出队，取队头四种功能。<br>
+还有<code>队的销毁</code>，这点很重要，为了防止内存泄漏，一定要牢记<code>malloc</code>的节点如果不用就要销毁掉！<br>
+先是书写队列的结构，那么考虑队列里<code>放什么类型</code>呢？答案是<code>指针</code>，如果存放的是树结构里<code>节点的值</code>，那么在出队后，将其左右孩子进行入队就会很麻烦，因为单一的值是<code>无法连通前后</code>的！</p>
+<pre><code class="language-c">typedef struct BinaryTreeNode* QDatatype;
+
+typedef struct QueueNode
+{
+	struct QueueNode* next;
+	QDatatype data;
+}QNode;
+
+typedef struct Queue
+{
+	QNode* head;
+	QNode* tail;
+	int size;
+}Queue;
+</code></pre>
+<p>这里建立队列使用到了两个结构体，因为这里建立的队列是链式结构的，方便连通前后，要做成数组型的队列虽然简单，但之后的层序遍历就不太好写了。所以还是在这里稍微麻烦一点吧。<br>
+下面给出几种基本功能的实现。</p>
+<pre><code class="language-c">//队列的初始化
+void QueueInit(Queue* pq)
+{
+	assert(pq);
+
+	pq-&gt;head = pq-&gt;tail = NULL;
+	pq-&gt;size = 0;
+}
+//队列的销毁
+void QueueDestroy(Queue* pq)
+{
+	assert(pq);
+	QNode* cur = pq-&gt;head;
+	while (cur)
+	{
+		QNode* next = cur-&gt;next;
+		free(cur);
+		cur = next;
+	}
+
+	pq-&gt;head = pq-&gt;tail = NULL;
+	pq-&gt;size = 0;
+}
+//入队操作
+void QueuePush(Queue* pq, QDatatype x)
+{
+	QNode* newnode = (QNode*)malloc(sizeof(QNode));
+	if (newnode == NULL)
+	{
+		perror(&quot;malloc fail&quot;);
+		return;
+	}
+	newnode-&gt;data = x;
+	newnode-&gt;next = NULL;
+
+	if (pq-&gt;head == NULL)
+	{
+		assert(pq-&gt;tail == NULL);
+
+		pq-&gt;head = pq-&gt;tail = newnode;
+	}
+	else
+	{
+		pq-&gt;tail-&gt;next = newnode;
+		pq-&gt;tail = newnode;
+	}
+
+	pq-&gt;size++;
+}
+//出队操作
+void QueuePop(Queue* pq)
+{
+	assert(pq);
+	assert(pq-&gt;head != NULL);
+	if (pq-&gt;head-&gt;next == NULL)
+	{
+		free(pq-&gt;head);
+		pq-&gt;head = pq-&gt;tail = NULL;
+	}
+	else
+	{
+		QNode* next = pq-&gt;head-&gt;next;
+		free(pq-&gt;head);
+		pq-&gt;head = next;
+	}
+
+	pq-&gt;size--;
+}
+//判断队空
+bool QueueEmpty(Queue* pq)
+{
+	assert(pq);
+
+	return pq-&gt;size == 0;
+}
+//取队头元素
+QDatatype QueueFront(Queue* pq)
+{
+	assert(pq);
+	assert(!QueueEmpty(pq));
+
+	return pq-&gt;head-&gt;data;
+}
+</code></pre>
+<h1 id="层序遍历">💽层序遍历</h1>
+<p>先将头结点入队。</p>
+<pre><code class="language-c">Queue q;
+QueueInit(&amp;q);
+QueuePush(&amp;q, root);
+</code></pre>
+<p>接下来的关键就是确定循环的建立，其终止条件为<code>队列为空</code>。<br>
+也就是先将队头出队，再将其孩子入队，不断循环，当最后一个孩子出队，队为空，即停止。</p>
+<pre><code class="language-c">while (!QueueEmpty(&amp;q)) {
+		BTNode* new = QueueFront(&amp;q);
+		QueuePop(&amp;q);
+		printf(&quot;%d-&gt;&quot;, new-&gt;_data);
+		if (new-&gt;_left)
+			QueuePush(&amp;q, new-&gt;_left);
+		if (new-&gt;_right)
+			QueuePush(&amp;q, new-&gt;_right);
+	}
+</code></pre>
+<p>这里就体现出了链式队列的优越性，层次遍历就写的非常简单了。<br>
+还有销毁操作不要忘记。</p>
+<pre><code class="language-c">QueueDestroy(&amp;q);
+</code></pre>
+<h1 id="完全二叉树的判断">⏱完全二叉树的判断</h1>
+<p>之所以会在这里提到完全二叉树的判断，是因为其思想与层次是相似的。<br>
+完全二叉树的特点就是<code>在遇到第一个null节点后，就不会再遇到非null节点</code>！<br>
+这个特点就是解题的关键所在。<br>
+这里提供一种稍微简单的解题思路：将每个节点按顺序（层次）入队，当遇到<code>null</code>就立刻停止循环，接着遍历剩下的队列，只要出现了<code>非null节点</code>，就说明此二叉树不是完全二叉树。<br>
+代码实现如下（是返回0，非返回1）：</p>
+<pre><code class="language-c">int BinaryTreeComplete(BTNode* root) {
+	Queue q;
+	QueueInit(&amp;q);
+	QueuePush(&amp;q, root);
+	while (!QueueEmpty(&amp;q))
+	{
+		BTNode* new = QueueFront(&amp;q);
+		QueuePop(&amp;q);
+		if (new == NULL)
+			break;
+		if (new-&gt;_left)
+			QueuePush(&amp;q, new-&gt;_left);
+		else
+			QueuePush(&amp;q, NULL);
+		if (new-&gt;_right)
+			QueuePush(&amp;q, new-&gt;_right);
+		else
+			QueuePush(&amp;q, NULL);
+
+
+	}
+	while (!QueueEmpty(&amp;q)) {
+		if (QueueFront(&amp;q) != NULL)
+			return 1;
+		else
+			QueuePop(&amp;q);
+	}
+	return 0;
+	
+}
+</code></pre>
+<p>可以看到其代码与层次遍历是相似的。</p>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-31</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/A79l9na2y/" title="数据结构与算法">数据结构与算法 </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-algorithm- level-order traverse/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-insertsortandshellsort/" title="【算法】关于插入排序和希尔排序的一些理解">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-Divideandconqueralgorithm/" title=" 【算法】链式二叉树里的遍历与分治思想">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【leetcode】设计循环队列 | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【leetcode】设计循环队列</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>来源：<a href="https://leetcode.cn/problems/design-circular-queue/">622.设计循环队列</a></p>
+</blockquote>
+<p>设计你的循环队列实现。 循环队列是一种线性数据结构，其操作表现基于 FIFO（先进先出）原则并且队尾被连接在队首之后以形成一个循环。它也被称为“环形缓冲器”。</p>
+<p>循环队列的一个好处是我们可以利用这个队列之前用过的空间。在一个普通队列里，一旦一个队列满了，我们就不能插入下一个元素，即使在队列前面仍有空间。但是使用循环队列，我们能使用这些空间去存储新的值。</p>
+<p>你的实现应该支持如下操作：</p>
+<p>MyCircularQueue(k): 构造器，设置队列长度为 k 。<br>
+Front: 从队首获取元素。如果队列为空，返回 -1 。<br>
+Rear: 获取队尾元素。如果队列为空，返回 -1 。<br>
+enQueue(value): 向循环队列插入一个元素。如果成功插入则返回真。<br>
+deQueue(): 从循环队列中删除一个元素。如果成功删除则返回真。<br>
+isEmpty(): 检查循环队列是否为空。<br>
+isFull(): 检查循环队列是否已满。<br>
+示例：<br>
+MyCircularQueue circularQueue = new MyCircularQueue(3); // 设置长度为 3<br>
+circularQueue.enQueue(1);  // 返回 true<br>
+circularQueue.enQueue(2);  // 返回 true<br>
+circularQueue.enQueue(3);  // 返回 true<br>
+circularQueue.enQueue(4);  // 返回 false，队列已满<br>
+circularQueue.Rear();  // 返回 3<br>
+circularQueue.isFull();  // 返回 true<br>
+circularQueue.deQueue();  // 返回 true<br>
+circularQueue.enQueue(4);  // 返回 true<br>
+circularQueue.Rear();  // 返回 4<br>
+提示：<br>
+所有的值都在 0 至 1000 的范围内；<br>
+操作数将在 1 至 1000 的范围内；<br>
+请不要使用内置的队列库。</p>
+<h1 id="思路">🍏思路</h1>
+<p>本题是想实现一个类似于下图结构的队列，本文采取<code>数组</code>的形式实现，但是难点就在于判空和判满。<br>
+<img src='https://imgbed.link/file/19458'></p>
+<blockquote>
+<p>rear指针用于当填入数据时，rear+1.<br>
+front指针用于删除数据时，front+1.</p>
+</blockquote>
+<p>当队空的时候，我们很容易知道front指针等于rear指针时，整个数组便可以判空，那如果一直往数组里塞入数据，导致rear指针不断的后移，最终和front指针相等时，整个队列也满了，那么此时队空和队满就是一个相同的条件了，无法做出判断。</p>
+<p>所以我们采取额外开辟一个空位的方法，此空位<code>不存储任何数据</code>，仅作为判满的辅助条件。<br>
+当rear+1到达此空位时，（rear+1）%capacity ==front  ，便可作为判满条件。<br>
+为何要取余呢，因为rear在不断的向前推进，会不断加1，而我们设计循环队列的思路就如上面展示的图一样，其<code>逻辑</code>路径是一条<code>环路</code>，所以通过取余可以让rear指针回到原本开始时的位置。</p>
+<h1 id="定义结构">🍎定义结构</h1>
+<pre><code class="language-c">typedef struct {
+  int* arr;
+  int front;
+  int rear;
+  int capacity;
+} MyCircularQueue;
+
+</code></pre>
+<p>按照上面的说法，我们定义了如上的队列结构，其包含两个指针，分别指向队头和队尾，以arr为一个地址基址，方便后续的内存开辟。capacity则是数组的容量大小。</p>
+<h1 id="初始化队列">🍐初始化队列</h1>
+<pre><code class="language-c">MyCircularQueue* myCircularQueueCreate(int k) {
+        MyCircularQueue* q=(MyCircularQueue*)malloc(sizeof(MyCircularQueue));
+        q-&gt;arr=(int*)malloc(sizeof(int)*(k+1));
+        q-&gt;capacity=k+1;
+        q-&gt;front=q-&gt;rear=0;
+    return q;
+}
+</code></pre>
+<p>传入的k代表我们要输入的<code>数组元素个数</code>，依照上面的思路我们要额外开辟一个空间方便判断队满。</p>
+<h1 id="入队和出队">🍊入队和出队</h1>
+<p>入队：</p>
+<pre><code class="language-c">bool myCircularQueueEnQueue(MyCircularQueue* obj, int value) {
+        if((obj-&gt;rear+1)%(obj-&gt;capacity)==obj-&gt;front){
+            return false;
+        }
+        obj-&gt;arr[obj-&gt;rear]=value;
+        obj-&gt;rear=(obj-&gt;rear+1)%obj-&gt;capacity;
+        return true;
+}
+</code></pre>
+<p>入队就需要判断是否队满，所以就要用到  <code>(obj-&gt;rear+1)%(obj-&gt;capacity)==obj-&gt;front</code>这个条件。<br>
+同时需要注意插入数据时rear+1的情况，如下图的情况：<br>
+<img src='https://imgbed.link/file/19459'><br>
+rear如果不取余操作，就会超出设置的k，那么整个回路就会出现问题了。<br>
+出队：</p>
+<pre><code class="language-c">bool myCircularQueueDeQueue(MyCircularQueue* obj) {
+        if(obj-&gt;rear==obj-&gt;front){
+            return false;
+        }
+        obj-&gt;front=(obj-&gt;front+1)%obj-&gt;capacity;
+        return true;
+}
+</code></pre>
+<p>判断队是否为空就直接判断obj-&gt;rear==obj-&gt;front即可。<br>
+front+1同上，要进行取余操作。</p>
+<h1 id="取队头队尾">🍌取队头队尾</h1>
+<pre><code class="language-c">int myCircularQueueFront(MyCircularQueue* obj) {
+   if(obj-&gt;rear==obj-&gt;front){
+            return -1;
+        }
+        return obj-&gt;arr[obj-&gt;front];
+}
+
+int myCircularQueueRear(MyCircularQueue* obj) {
+    if(obj-&gt;rear==obj-&gt;front){
+            return -1;
+        }
+        return obj-&gt;arr[(obj-&gt;rear-1+obj-&gt;capacity)%obj-&gt;capacity];
+}
+</code></pre>
+<p>要取值就要考虑是否为空，所以直接使用obj-&gt;rear==obj-&gt;front进行判断即可。<br>
+重点在于第二个函数。<br>
+如下面的情况：<br>
+<img src='https://imgbed.link/file/19460'><br>
+rear指向了第四个位置，但这个位置是不需要放值的，如果return obj-&gt;arr[obj-&gt;rear]，就会出现问题。所以采用取余操作。</p>
+<h1 id="判空判慢与销毁">🍉判空判慢与销毁</h1>
+<p>这个就没啥好说的了。</p>
+<pre><code class="language-c">bool myCircularQueueIsEmpty(MyCircularQueue* obj) {
+  return obj-&gt;front==obj-&gt;rear;
+}
+
+bool myCircularQueueIsFull(MyCircularQueue* obj) {
+ return (obj-&gt;rear+1)%(obj-&gt;capacity)==obj-&gt;front;
+}
+
+void myCircularQueueFree(MyCircularQueue* obj) {
+       free(obj-&gt;arr);
+       free(obj);
+}
+</code></pre>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-20</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/d07frksdd/" title="刷题">刷题 </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-leetcode-design-circular-queue/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-heap and heapsort/" title="【算法】堆和堆排序">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-leetcode-copy-list-with-random-pointer/" title=" 【leetcode】巧解深度拷贝“带随机指针”的链表">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【leetcode】双指针巧解判断链表是否有环的问题 | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【leetcode】双指针巧解判断链表是否有环的问题</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>本章讲述的例题来自leetcode <a href="https://leetcode.cn/problems/linked-list-cycle/description/">141.环形链表1</a>,<a href="https://leetcode.cn/problems/linked-list-cycle-ii/description/">142.环形链表2</a>，旨在利用双指针解决此类型的问题。</p>
+</blockquote>
+<h1 id="141环形链表1">💻141.环形链表1</h1>
+<p>给定一个链表的头节点  head ，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。</p>
+<p>如果链表中有某个节点，可以通过连续跟踪 next 指针再次到达，则链表中存在环。 为了表示给定链表中的环，评测系统内部使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。如果 pos 是 -1，则在该链表中没有环。注意：pos 不作为参数进行传递，仅仅是为了标识链表的实际情况。</p>
+<p>不允许修改 链表。</p>
+<p></p>
+<p>示例 1：<br>
+<img src='https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist.png'></p>
+<p>输入：head = [3,2,0,-4], pos = 1<br>
+输出：返回索引为 1 的链表节点<br>
+解释：链表中有一个环，其尾部连接到第二个节点。<br>
+示例 2：<br>
+<img src='https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist_test2.png'></p>
+<p>输入：head = [1,2], pos = 0<br>
+输出：返回索引为 0 的链表节点<br>
+解释：链表中有一个环，其尾部连接到第一个节点。<br>
+示例 3：</p>
+<img src='https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist_test3.png'>
+<p>输入：head = [1], pos = -1<br>
+输出：返回 null<br>
+解释：链表中没有环。</p>
+<p>解法：本题可以思考转换为<code>追击问题</code>，设定两个指针，一个走得快，一个走得慢，当链表存在<code>闭环</code>时，快指针就会在环中不断的循环，而慢指针此时就有机会追上快指针。当二者相遇，就证明此链表为环形的链表。<br>
+那么问题又来了，快慢指针该如何设定走的速度呢？如果快指针每次走2，慢指针走1，他们是否会在环中相遇呢？将快指针的速度调到一次走3，一次走4呢？<br>
+在这里我们可以尝试以归纳的思想证明以下。<br>
+先假定两指针的速度分别为2，1。<br>
+若链表<code>存在环</code>，那么fast必定会先进入环中，当slow开始入环，设定其二指针相隔距离为<code>N</code>,此时问题就已经演变为了fast指针去追击slow指针，且二者相隔N。<br>
+fast一次走两步，slow一次走一步，也就意味着<code>N会不断的减1</code>，那么<code>N一定会减小到0</code>，当N为0时，快指针也就追上了慢指针。<br>
+若fast一次走<code>三步</code>呢？<br>
+N,N-2,N-4,N-6··············，如果N是一个<code>偶数</code>，那么N也是可以为0的，意味着相遇，那如果N是<code>奇数</code>呢？必定会得到-1，也就是<code>fast走快了一步</code>，走到了slow的前面去了。此时fast又得开始一段新的追击,假设环的长度为C，那么<code>新的N就等于C-1</code>,此时能否追上就要考虑C-1是偶数还是奇数了。</p>
+<p>参考代码如下：</p>
+<pre><code class="language-c">/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+bool hasCycle(struct ListNode *head) {
+    struct ListNode* slow =head, *fast=head;
+    while(fast &amp;&amp; fast-&gt;next)
+    {
+        slow=slow-&gt;next;
+        fast=fast-&gt;next-&gt;next;
+        if(slow==fast)
+        {
+            return true;
+        }
+        
+    }
+    return false;
+}
+</code></pre>
+<h1 id="142环形链表2">🎥142.环形链表2</h1>
+<p>给定一个链表的头节点  head ，返回链表开始入环的第一个节点。 如果链表无环，则返回 null。</p>
+<p>如果链表中有某个节点，可以通过连续跟踪 next 指针再次到达，则链表中存在环。 为了表示给定链表中的环，评测系统内部使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。如果 pos 是 -1，则在该链表中没有环。注意：pos 不作为参数进行传递，仅仅是为了标识链表的实际情况。</p>
+<p>不允许修改 链表。</p>
+<p></p>
+<p>示例 1：</p>
+<img src='https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist.png'>
+<p>输入：head = [3,2,0,-4], pos = 1<br>
+输出：返回索引为 1 的链表节点<br>
+解释：链表中有一个环，其尾部连接到第二个节点。<br>
+示例 2：<br>
+<img src='https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist_test2.png'></p>
+<p>输入：head = [1,2], pos = 0<br>
+输出：返回索引为 0 的链表节点<br>
+解释：链表中有一个环，其尾部连接到第一个节点。<br>
+示例 3：</p>
+<img src='https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist_test3.png'>
+<p>输入：head = [1], pos = -1<br>
+输出：返回 null<br>
+解释：链表中没有环。</p>
+<p>思路：此题算是上一道题的一个延深，直接上结论吧：</p>
+<blockquote>
+<p>让一个指针从<code>起始</code>位置开始遍历链表，同时让一个指针从<code>判环时相遇点</code>的位置开始绕环运行，两个指针每次都是<code>只走一步</code>，最终都会在<code>入口</code>处的位置相遇。</p>
+</blockquote>
+<p>这个结论也就意味着，只需要在上一道题所求出的那个判环相遇点开始与起点指针同步运行，二者一定会在环的入口处相遇。</p>
+<p><em>如何证明?</em><br>
+因为上题我们已经证明了fast走两步，slow走一步，就一定可以相遇的结论，那么我们本题也设定在相同的条件下进行一个假设归纳。<br>
+<img src='https://imgbed.link/file/18235'><br>
+设到入口处前的长度为l，环长c，相遇位置和入环口间距x。<br>
+那么slow指针走了多少步呢？l+x还是l+x+n<em>c呢？<br>
+答案是<code>l+x</code>，因为我们已经证得了快慢指针一定会相遇，所以慢指针不可能在环中走<code>超过一圈</code>。<br>
+fast指针呢？它走了l+x+c还是l+x+n</em>c呢？<br>
+有的人可能看到上面给出的那幅图，就会觉得fast在环中走了一圈，然后与slow相遇。<br>
+那如果是下面这张图呢？<br>
+<img src='https://imgbed.link/file/18236'><br>
+fast就走了不止一圈了。所以正确的答案就是<code>l+x+n*c</code>。<br>
+但是不管是错误的推断成l+x+c还是l+x+n<em>c，得到的结果都是<code>一致</code>的。<br>
+因为fast走的路程是slow的两倍，所以可以联立出以下的式子：<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mo>+</mo><mi>n</mi><mo>∗</mo><mi>c</mi><mo>+</mo><mi>x</mi><mo>=</mo><mn>2</mn><mo>∗</mo><mo>(</mo><mi>l</mi><mo>+</mo><mi>x</mi><mo>)</mo></mrow><annotation encoding="application/x-tex">l+n*c+x=2*(l+x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.77777em;vertical-align:-0.08333em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.46528em;vertical-align:0em;"></span><span class="mord mathdefault">n</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault">c</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">x</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathdefault">x</span><span class="mclose">)</span></span></span></span> ，解得： <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>l</mi><mo>=</mo><mi>n</mi><mo>∗</mo><mi>c</mi><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">l=n*c-x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault" style="margin-right:0.01968em;">l</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.46528em;vertical-align:0em;"></span><span class="mord mathdefault">n</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.66666em;vertical-align:-0.08333em;"></span><span class="mord mathdefault">c</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathdefault">x</span></span></span></span><br>
+可能初看不是很理解，可以将n带入成1，2，3，比如n为1时，l=c-x，那么此时两个指针分别从链表头和相遇点开始移动，就一定能在环的入口处相遇。n为2，l=2</em>c-x，从相遇点开始移动的指针绕着环转了2圈-x的路程，也恰好到达入环处。<br>
+所以代码如下：</p>
+<pre><code class="language-c">/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     struct ListNode *next;
+ * };
+ */
+struct ListNode *detectCycle(struct ListNode *head) {
+    struct ListNode* fast=head;
+    struct ListNode* slow=head;
+    while(fast&amp;&amp;fast-&gt;next){
+        fast=fast-&gt;next-&gt;next;
+        slow=slow-&gt;next;
+        if(fast==slow){
+            struct ListNode* begin=head;
+            struct ListNode* meet=slow;
+            while(begin!=meet){
+                begin=begin-&gt;next;
+                meet=meet-&gt;next;
+            }
+            return meet;
+        }
+
+    }
+    return NULL;
+}
+</code></pre>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-09</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/d07frksdd/" title="刷题">刷题 </a>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/fSM4VPbJS/" title="c语言">c语言 </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-leetcode-copy-list-with-random-pointer/" title="【leetcode】巧解深度拷贝“带随机指针”的链表">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/" title=" 【算法】快速排序，归并排序，两种二分的模板干货讲解，附带边界问题的分析。">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

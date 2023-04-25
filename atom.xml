@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://taylor516.github.io/</id>
+    <title>chengzi </title>
+    <updated>2023-04-25T12:42:19.572Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://taylor516.github.io/"/>
+    <link rel="self" href="https://taylor516.github.io/atom.xml"/>
+    <subtitle>一个程序员能造成多大的impact，取决于他的代码影响力。</subtitle>
+    <logo>https://taylor516.github.io/images/avatar.png</logo>
+    <icon>https://taylor516.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2023, chengzi </rights>
+    <entry>
+        <title type="html"><![CDATA[【c++】相较于c，c++是如何支持重载的？]]></title>
+        <id>https://taylor516.github.io/post/EEDnMXrLL/</id>
+        <link href="https://taylor516.github.io/post/EEDnMXrLL/">
+        </link>
+        <updated>2023-04-22T11:27:25.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【c++】c++支持的引用和c中的指针孰胜孰劣？]]></title>
+        <id>https://taylor516.github.io/post/j83dAH6PE/</id>
+        <link href="https://taylor516.github.io/post/j83dAH6PE/">
+        </link>
+        <updated>2023-04-18T07:32:05.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】关于插入排序和希尔排序的一些理解]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-insertsortandshellsort/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-insertsortandshellsort/">
+        </link>
+        <updated>2023-04-01T07:48:01.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】二叉树里的层序遍历与完全二叉树的判断]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm- level-order traverse/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm- level-order traverse/">
+        </link>
+        <updated>2023-03-31T02:51:47.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】链式二叉树里的遍历与分治思想]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-Divideandconqueralgorithm/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-Divideandconqueralgorithm/">
+        </link>
+        <updated>2023-03-26T04:43:26.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】堆和堆排序]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-heap and heapsort/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-heap and heapsort/">
+        </link>
+        <updated>2023-03-21T13:44:28.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【leetcode】设计循环队列]]></title>
+        <id>https://taylor516.github.io/post/chengzi-leetcode-design-circular-queue/</id>
+        <link href="https://taylor516.github.io/post/chengzi-leetcode-design-circular-queue/">
+        </link>
+        <updated>2023-03-20T08:02:18.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【leetcode】巧解深度拷贝“带随机指针”的链表]]></title>
+        <id>https://taylor516.github.io/post/chengzi-leetcode-copy-list-with-random-pointer/</id>
+        <link href="https://taylor516.github.io/post/chengzi-leetcode-copy-list-with-random-pointer/">
+        </link>
+        <updated>2023-03-15T13:23:18.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【leetcode】双指针巧解判断链表是否有环的问题]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-fastandslowpointer/">
+        </link>
+        <updated>2023-03-09T11:29:52.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[【算法】快速排序，归并排序，两种二分的模板干货讲解，附带边界问题的分析。]]></title>
+        <id>https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/</id>
+        <link href="https://taylor516.github.io/post/chengzi-algorithm-QuicksortMergesortingBinarysorting/">
+        </link>
+        <updated>2023-03-07T14:32:08.000Z</updated>
+    </entry>
+</feed>

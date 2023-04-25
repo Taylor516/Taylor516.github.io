@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【c++】c++支持的引用和c中的指针孰胜孰劣？ | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【c++】c++支持的引用和c中的指针孰胜孰劣？</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>前言： 最近学到了c++中的引用一章，发现引用和c中所学到的指针有着很相似的效果，但c++中仍然有着指针的一席之地，想必二者的适用场景是各有千秋，于是查阅资料，写了此文来方便日后复习。</p>
+</blockquote>
+<h1 id="引用的基本知识">🍐引用的基本知识</h1>
+<h2 id="概念">🍊概念</h2>
+<blockquote>
+<p>引用是C++中的一种<code>数据类型</code>，它是一种类似于指针的变量。引用可以被认为是一个变量的<code>别名</code>，它提供了一种<code>访问变量</code>的方式，使得程序员可以通过<code>不同的名称来操作同一个变量</code>，从而简化了代码的编写。<br>
+引用的语法非常简单，可以通过在变量名前面加上“&amp;”符号来定义一个引用。例如，如果我们定义了一个整型变量a，可以通过以下语句来定义一个引用b：</p>
+</blockquote>
+<pre><code class="language-c++">int a = 10;
+int &amp;b = a;
+</code></pre>
+<p>这样，变量b就成为了变量a的别名，它们<code>指向同一个内存地址</code>。因此，对变量b的操作也会影响到变量a。</p>
+<h2 id="引用的适用场景">🍅引用的适用场景</h2>
+<ol>
+<li>引用必须在定义时进行<code>初始化</code>。一旦引用被初始化，它将一直指向该变量，并不能再被改变。</li>
+<li>引用可以作为<code>函数参数</code>传递。通过引用传递参数可以避免复制大量的数据，提高程序的效率。</li>
+<li>引用可以作为函数的<code>返回值</code>。通过引用返回值可以避免复制大量的数据，提高程序的效率。</li>
+<li>引用可以被用来操作数组，但它的使用有一些限制。<br>
+这几点我会在后面进行一个详细的解释。<br>
+在C++中，引用的应用非常广泛，它可以用来简化代码、提高程序的效率，并且可以使代码更加易于理解和维护。在实际开发中，引用是一个非常重要的概念，掌握它的使用方法可以让程序员编写出更加高效、优雅的代码。</li>
+</ol>
+<h1 id="正餐">🍑正餐</h1>
+<h2 id="初始化">🥑初始化</h2>
+<p>人可以有多个外号，同样，一个变量也可以有多个引用。<br>
+<img src='https://tuchuang-1317757279.cos.ap-chengdu.myqcloud.com/%E5%BC%95%E7%94%A8-1.png'></p>
+<pre><code class="language-c++">    int a=10;
+    int&amp; b = a;
+	int&amp; c = a;
+	cout &lt;&lt; b &lt;&lt; endl;
+	cout &lt;&lt; c &lt;&lt; endl;
+	c = 20;
+	cout &lt;&lt; b &lt;&lt; endl;
+</code></pre>
+<p>得到的结果是10 10 20。说明了改变b与c可以影响a，且b与c指向的是<code>同一块</code>内存空间。<br>
+但一个引用就只可以引用一个实体。如果出现了一个引用取引用多个实体的情况，编译器是不会放行的。<br>
+引用在定义时就必须<code>进行初始化</code>，这是不同于指针的一点。</p>
+<h2 id="常引用">🍍常引用</h2>
+<pre><code class="language-c++">const int a=10;
+int&amp; b=a;
+</code></pre>
+<p>这样的例子是典型的错误。编译器给出了报错原因：<br>
+<img src='https://tuchuang-1317757279.cos.ap-chengdu.myqcloud.com/%E5%BC%95%E7%94%A8-2.png'></p>
+<blockquote>
+<p>在这段代码中，常量a被定义为const int类型，它的值<code>不能被修改</code>。同时，变量b被定义为int类型的引用，它指向了a的内存地址。由于a是一个常量，它的值不能被修改，因此<code>对b的任何修改都会影响到a的值</code>，这与const int类型的a所表示的<code>语义不符</code>。因此，编译器会报错，提示“invalid initialization of reference of type 'int&amp;' from expression of type 'const int'”。<br>
+常引用在c++里通常被用作函数参数，函数返回值或者成员变量。</p>
+</blockquote>
+<pre><code class="language-c++">void print(const int&amp; a) {
+
+	cout &lt;&lt; a &lt;&lt; endl;
+}
+</code></pre>
+<p>传入的a是一个常引用，此时在函数里对a的<code>任何修改</code>都是<code>非法</code>的！</p>
+<pre><code class="language-c++">const string&amp; getLonger(const string&amp; str1, const string&amp; str2) {
+    return str1.length() &gt; str2.length() ? str1 : str2;
+}
+</code></pre>
+<p>此函数的功能是返回较长的一个字符串，常引用作为返回值确保了字符串在返回时<code>不会被修改</code>。此外，在作类成员变量，或者遍历容器时也会有常引用的身影。<br>
+总之，常引用在C++中被广泛应用，可以<code>避免</code>不必要的变量<code>拷贝</code>，同时保护变量的值<code>不被修改</code>。</p>
+<h2 id="引用的适用场景-2">🍇引用的适用场景</h2>
+<p>在介绍常引用时，谈到了其可以作为函数参数，函数返回值，引用也是同样可以做到，接下来就是一些详细的分析与解释。</p>
+<h3 id="做参数">🌰做参数</h3>
+<pre><code class="language-c++">void add(int&amp; nums1, int&amp; nums2) {
+	cout &lt;&lt; nums1 + nums2 &lt;&lt; endl;
+}
+</code></pre>
+<p>上面就是一个引用做参数的典型例子，其不仅在写法上更简洁，效率也是更高的。</p>
+<ol>
+<li>减少了数据的<code>拷贝</code><br>
+当使用<code>传值</code>方式时，函数会将参数的值复制一份给形参，如果参数<code>较大</code>，则会消耗较多的时间和空间。而使用引用做参数时，函数只需要<code>传入参数的地址</code>，不需要复制数据，因此可以减少数据的拷贝，提高程序的效率。</li>
+<li>减少了内存的占用<br>
+当使用传值方式时，每次调用函数都需要为形参<code>分配内存空间</code>，当调用次数较多时，会占用较多的内存空间。而使用引用做参数时，只需要传递一个地址，不需要分配额外的内存空间，因此可以减少内存的占用，提高程序的效率。</li>
+</ol>
+<h3 id="做返回值">🥐做返回值</h3>
+<pre><code class="language-c++">int add(int nums1,int nums2){
+    return nums1+nums2;
+}
+int main(){
+    int a=20;
+    int b=10;
+    int c=add(a,b);
+}
+</code></pre>
+<p>这是一个<code>传值返回</code>的传统写法，在返回时会创建一个<code>临时变量</code>，哪怕函数的栈帧已经被销毁，main里面接受的值也是从临时变量得来的，所以这种传递方式是安全的。<br>
+<img src='https://tuchuang-1317757279.cos.ap-chengdu.myqcloud.com/%E5%BC%95%E7%94%A8-3.png'><br>
+但如果返回的是一个引用，那么情况就会出现变数了。</p>
+<pre><code class="language-c++">int&amp; add(int&amp; nums1, int&amp; nums2) {
+		int sum = nums1 + nums2;
+		return sum;
+	}
+</code></pre>
+<p>此时int c=add(a, b)中的c是不确定的，可能得到正确的答案，那是因为add函数栈帧还没清理，如果栈帧被清理，得到的就是个随机值了。<br>
+同样的，如果将接受的变量换做一个<code>引用</code>，会变得更加的不可控。</p>
+<pre><code class="language-c++"> int&amp; c=add(a, b);
+	 cout &lt;&lt; c &lt;&lt; endl;
+	 printf(&quot;aaa\n&quot;);
+	 cout &lt;&lt; c &lt;&lt; endl;
+</code></pre>
+<p>我的编译器给出的结果：</p>
+<blockquote>
+<p>30<br>
+aaa<br>
+-858993460</p>
+</blockquote>
+<p>可见在随意的调用另一个函数后，c的值发生了变化。<br>
+<img src='https://tuchuang-1317757279.cos.ap-chengdu.myqcloud.com/%E5%BC%95%E7%94%A8-4.png'></p>
+<p>此时，c是指向sum的，当add函数调用完成后<code>栈帧就被销毁</code>，但此时我的编译器仍然没有清理它，销毁意味着系统将add所用的栈帧空间<code>回收</code>，但回收并不意味着数据也随之抹去，比如你今天在A201上课，放学后你离开了A201，意味着你将教室归还，当你朋友第二天来<code>A201</code>上课时，教室是存在的,只是<code>使用者被换了</code>。<br>
+所以这里当add调用完成后，空间还给了操作系统，操作系统又把这块空间给了printf函数来使用，自然第二次输出c就会是乱码了。因为c始终都<code>指向</code>这个位置，但<code>谁来用</code>这个位置是不确定的。</p>
+<p>那么可以做如下的总结：</p>
+<ol>
+<li>几乎在任何的场景下使用<code>引用传参</code>都是可以的。</li>
+<li>但<code>引用返回</code>是需要谨慎使用的。一不留神就使用到了错误的空间。</li>
+<li>函数返回时，出了函数作用域，如果返回对象还<code>未归还</code>给系统，则可以使用引用返回，但如果已经将其归还给了系统，那么最好用传值返回。</li>
+</ol>
+<h1 id="引用和指针的区别">🌽引用和指针的区别</h1>
+<p>看到这里，你会发现指针似乎和引用没有很大的区别，确实，就我现阶段的学习来看，二者的差别并不大。<br>
+以下是我总结的一些差别和相同的地方。<br>
+区别：</p>
+<ol>
+<li>指针可以被<code>重新赋值</code>，而引用不行。</li>
+<li>指针可以为<code>空</code>，而引用不行。</li>
+<li>指针可以进行指针运算，而引用不行。</li>
+<li>指针可以<code>指向空地址</code>，而引用必须指向已存在的对象。</li>
+<li>指针可以指向同一类型的不同对象，而引用只能指向同一类型的同一对象。</li>
+<li>引用必须在定义时初始化，而指针可以在任何时候进行初始化。</li>
+<li>指针有<code>多级</code>的说法，但引用没有。</li>
+<li>指针需要<code>解引用</code>才可以访问存储的地址，引用不用。<br>
+相同：</li>
+<li>指针和引用都是用来间接访问程序中的变量。</li>
+<li>指针和引用都可以作为函数的参数和返回值。</li>
+</ol>
+<p>指针和引用都可以提高程序的运行效率，因为它们避免了不必要的变量拷贝。<br>
+指针和引用都是C++中的两种重要的数据类型，它们在某些方面有相同之处，但也有很多区别。在使用时，需要根据具体的情况来选择使用哪种类型。例如，如果需要动态分配内存或者需要进行指针运算，则必须使用指针；而如果不需要修改变量的值，则可以使用引用，避免了指针的复杂性。</p>
+<p>还有一点很有意思，在语法的概念上，引用就是取一个别名，是<code>没有独立的空间</code>的。但在其底层实现上实际是存在空间的，这是因为<code>引用是按照指针的形式来实现的</code>。这一点可以在反汇编代码进行查证。<br>
+<img src='https://tuchuang-1317757279.cos.ap-chengdu.myqcloud.com/%E5%BC%95%E7%94%A8-5.png'></p>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-04-18</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/oQJc9q4Ck/" title="c/c++">c/c++ </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/j83dAH6PE/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/EEDnMXrLL/" title="【c++】相较于c，c++是如何支持重载的？">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-algorithm-insertsortandshellsort/" title=" 【算法】关于插入排序和希尔排序的一些理解">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

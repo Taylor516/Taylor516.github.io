@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【java】以简单的图书管理系统讲清楚类，对象，继承，多态与接口的相关知识点 | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【java】以简单的图书管理系统讲清楚类，对象，继承，多态与接口的相关知识点</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>【前言】🍊以图书管理系统的实现，来讲清楚一些java入门学习阶段非常重要的概念与思想。包括类与对象，接口与继承，还有多态等等基础且重要的知识点。</p>
+</blockquote>
+<h1 id="️-准备">⚽️ 准备</h1>
+<p>构建一个简单的图书管理系统，可以大致分为三个package。</p>
+<ul>
+<li>user包</li>
+<li>book包</li>
+<li>operation包</li>
+</ul>
+<p>也就是分为<code>用户，书，操作功能</code>。<br>
+其中user包包含user类，regularuser类，adminuser类。<br>
+book包包含book类，booklist类。<br>
+operation包包含addbook类，deletebook类，findbook类，borrowbook类，returnbook类。</p>
+<h1 id="类与对象">🏀类与对象</h1>
+<p>上面我们提到了类，那什么是类？<br>
+java是一门<code>面向对象</code>的语言。面向对象就是依靠<code>对象的交互</code>来完成一件事。使用面向对象的思路来写程序，会更加友好。<br>
+举个例子，比如你打算去菜市场买菜，你需要准备菜篮子，换好衣服，规划好一条路线，沿途会经过哪些商贩，又会去买哪些蔬菜······，但是如果使用外送服务，你只需要下单时注明需要什么菜，几时送到什么地方即可。在这个过程里，压根不会关心菜是怎么买来的。又比如洗衣服，传统的洗衣过程是很繁琐的，但现代的洗衣机可以让步骤节省到三步，丢衣服进去，洗衣，拿出来晾干。这就是面向对象来处理问题。<br>
+如上所说，洗衣机是对象，外送服务也是对象，对象就好比是<code>现实生活中的实体</code>。对对象进行一个<code>抽象</code>所得到的就是类。<br>
+那么在java中如何去描述一个类呢？定义一个类需要<code>class关键字</code>。<br>
+例如定义user类：</p>
+<pre><code class="language-java">public class User {
+    private String name;
+    
+}
+</code></pre>
+<p>括号中所包含的就是类的成员。属性用来<code>描述类</code>，称为<code>类的成员变量</code>。就像上面的user类，可以添加<code>名字name，年龄age，性别gender</code>等完善这个类，有点像c语言里的结构体。类中也可以包含<code>方法</code>，类似于c的函数。 在后面的例子里会添加方法。<br>
+类有以下几点需要注意：</p>
+<ul>
+<li>一般一个文件只定义<code>一个类</code>。</li>
+<li>main方法所在类需要public修饰。</li>
+<li>public修饰的类的名字要和<code>文件名相同</code>。</li>
+</ul>
+<blockquote>
+<p>类就好比是一个<code>模板</code>，对象就是依托于模板构建出来的<code>实例</code>，用类这个类型创建对象，这个过程我们称为<code>实例化</code>。<br>
+一个明显的类比：类实例化出对象，就相当于用设计图纸建造一栋真实的房子。</p>
+</blockquote>
+<p>在java里，定义一个类，就相当于创造了一个新的类型，我们可以通过<code>new关键字</code>，来配合类实例化出各种对象。</p>
+<ul>
+<li>new的对象都是在<code>堆上</code>。所以其生命周期与程序的运行周期一样。</li>
+</ul>
+<p>例如实例化一个用户：</p>
+<pre><code class="language-java"> public static void main(String[] args) {
+        User person1=new User(&quot;taylor&quot;);  //实例化的基本格式
+        System.out.println(person1.name);
+    }
+</code></pre>
+<p>这样就实例化出一个对象peison1，并且可以赋名为taylor（这个要配合构造方法，后面会讲）。</p>
+<ul>
+<li>用<code>.</code>来访问对象中的属性和方法。如上面的输出，就可以调用person1.name，来打印person1的名字。</li>
+<li>同一个类创建多个实例。</li>
+</ul>
+<p>接着创建出Regularuser和Adminuser两个类来。</p>
+<h1 id="构造方法">🏈 构造方法</h1>
+<p>在写这两个类前需要在user类里添加<code>构造方法</code>。<br>
+首先搞明白什么是构造方法。<br>
+就像我们熟知的，定义一个局部变量，在使用前必须要<code>初始化</code>，类也是一样。类借助<code>构造方法来完成初始化</code>。但<code>不</code>负责开辟空间。<br>
+构造方法是一个特殊的成员方法。</p>
+<ul>
+<li><code>名字必须与类名相同</code>。</li>
+<li>一般由<code>public</code>修饰。</li>
+<li>没有返回值类型。</li>
+</ul>
+<blockquote>
+<p>并且在创建对象（实例化）时，由编译器来<code>自动</code>进行调用，且在生命周期类只调用<code>一次</code>。</p>
+</blockquote>
+<p>以下就是书写User类的构造方法，因为我们只定义了一个name变量，所以构造方法里也只需要对name进行初始化。</p>
+<pre><code class="language-java">public class User {
+    private String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+}
+</code></pre>
+<p>这是<code>有参数</code>的构造方法。如果我们没有<code>显式定义</code>，编译器在编译时也会<code>自动生成无参数</code>的构造方法。但是一但用户自己定义了，编译器就<code>不再生成</code>。</p>
+<pre><code class="language-java">public User(){
+      //无参的构造方法，可以在此放入初始化的变量，如this.name=&quot;hehe&quot;; 如果user类没有成员也可以啥都不写
+}
+</code></pre>
+<p>在构造方法里，有一个this关键字。<br>
+其作用在于：</p>
+<blockquote>
+<p>this引用指向当前对象。也就是说，<code>谁在调用这个方法，谁就是this</code>。<br>
+this.name = name的意思就是将传进来的name赋给了这个类的对象的name。</p>
+</blockquote>
+<p>构造方法可以进行<code>重载</code>。也就是在一个类里可以对构造方法<code>根据用户不同的需求</code>提供。</p>
+<pre><code class="language-java">public class User {
+    private String name;
+    int age;
+    public User()
+    {
+        this.name=&quot;xiaoming&quot;;
+        this.age=12;
+        System.out.println(&quot;调用了无参构造方法&quot;);
+    }
+    public User(String name) {
+        this.name = name;
+        System.out.println(&quot;调用了只需name的构造方法&quot;);
+    }
+    public User(String name,int age){
+        this.age=age;
+        this.name=name;
+        System.out.println(&quot;调用了需要name和age的构造方法&quot;);
+    }
+
+    public static void main(String[] args) {
+        User person1=new User(&quot;taylor&quot;);
+        System.out.println(person1.name);
+    }
+}
+</code></pre>
+<p>我们只初始化了name这个属性，那么就调用参数只有name的构造方法。<br>
+如果只初始化name，但要求访问age呢？</p>
+<pre><code class="language-java">   User person1=new User(&quot;taylor&quot;);
+        System.out.println(person1.age);
+</code></pre>
+<p>输出<code>0</code><br>
+这是为何呢？我们明明只初始化了name呀，为何age可以输出为0？</p>
+<blockquote>
+<p>在new的时候，编译器就自动完成了对成员变量的<code>默认初始化</code>了。即当对象<code>空间被申请好</code>，对象中所包含的成员就已经<code>设置好了初值</code>。</p>
+</blockquote>
+<ul>
+<li>boolean   false</li>
+<li>char    '/uoooo'(null)</li>
+<li>byte (byte)0</li>
+<li>short (short)0</li>
+<li>int 0</li>
+<li>long 0L</li>
+<li>float 0.0f</li>
+<li>double 0.0d</li>
+</ul>
+<p>以上就是关于构造方法需要掌握的一些知识点。在书写完user类的构造方法后就可以去写adminuser类和regularuser类了。</p>
+<h1 id="️继承">⚾️继承</h1>
+<p>普通用户和管理员用户，虽然对系统所拥有的权限不完全相同，但也有大量相似的信息，面向对象的思想中提出了继承的概念，用以进行<code>共性抽取与代码的复用</code>。</p>
+<blockquote>
+<p>继承机制，允许在保持原有类特性的基础上。来进行一个拓展，并往里面添加<code>新的功能</code>。<br>
+另一个功能就是实现<code>多态</code>。</p>
+</blockquote>
+<p>比如往类中放入名字，年龄，性别等成员变量，这些变量在adminuser类和regularuser类里都会用到，那么出于代码复用的思想，就可以将其提取出来作为一个公用的父类（也被称为基类），通过继承后，就可以使得子类可以<code>复用父类中的成员，并只需要添加自己所需要的特别的成员或方法</code>。<br>
+继承需要借助<code>关键字extends</code>:<br>
+普通用户类：</p>
+<pre><code class="language-java">public class Regularuser extends User{
+    
+    public Regularuser(String name) {
+        super(name);
+    }
+}
+</code></pre>
+<p>管理员类：</p>
+<pre><code class="language-java">public class Adminuser extends User {
+    public Adminuser(String name) {
+        super(name);
+    }
+}
+</code></pre>
+<blockquote>
+<p>可以看到，子类也是有构造方法的。但是<code>有其子之前必须先有父</code>，在对子类对象进行一个构造时，需要先去调用<code>父类</code>的构造方法，再执行<code>子类</code>的构造方法。</p>
+</blockquote>
+<ul>
+<li>子类对象成员有两部分组成，父类继承下来的和子类新增加的。</li>
+<li>若父类是<code>无参构造</code>，则子类的无参构造<code>第一行</code>会默认是<code>super();</code>。</li>
+<li>若父类是<code>有参构造</code>，则此时就需要为子类显式定义构造方法，并且在子类构造方法中<code>选择合适的父类构造方面调用</code>。</li>
+<li><code>super关键字</code>就可以实现父类构造方法的调用，且必须是子类构造方法中的<code>第一行</code>才行，<code>不能与this同时出现</code>。</li>
+</ul>
+<p>就像上面写的两个类，都继承于父类user，那么都需要在自己的构造方法第一行通过super关键字来调用父类构造，否则<code>编译器报错</code>。<br>
+如果父类传下来多个参数呢？那么就顺着书写就好了。</p>
+<pre><code class="language-java">super(name,age,gender);
+</code></pre>
+<p>又比如现在在regularuser类里有一个只属于regularuser的属性，其构造方法就是这样：</p>
+<pre><code class="language-java">public class Regularuser extends User{
+
+   String Specialproperties;
+   public Regularuser(String name, String specialproperties) {
+       super(name);
+       this.Specialproperties = specialproperties;
+   }
+}
+</code></pre>
+<p>关于继承还有一个小tip：<code>各类代码块的执行顺序</code>。<br>
+代码块可以分为三种：<br>
+<em>静态代码块</em></p>
+<pre><code class="language-java">static{}
+</code></pre>
+<p><em>实例代码块</em></p>
+<pre><code class="language-java">{}
+</code></pre>
+<p><em>构造代码块</em></p>
+<pre><code class="language-java">public 类名(){}
+</code></pre>
+<p>其执行顺序为：</p>
+<blockquote>
+<p>1.父类静态代码块<br>
+2.子类静态代码块<br>
+3.父类实例代码块<br>
+4.父类构造代码块<br>
+5.子类实例代码块<br>
+6.子类构造代码块</p>
+</blockquote>
+<p>静态代码块会先执行，并且只在<code>类加载阶段执行一次</code>。当有<code>对象进行创建时</code>，才会去执行实例的代码块，<code>当实例代码块执行完毕才是构造代码块</code>。<br>
+父类静态代码块比子类更快，是<code>最早执行</code>的。<br>
+第<code>二</code>次实例化<code>子类对象</code>时，<code>父类与子类的静态代码块都不会再执行</code>。</p>
+<p>讲到这里了，就可以将book包里的book类和booklist类写一下了。<br>
+book类</p>
+<pre><code class="language-java">public class Book {
+    private String bookname;
+    private String author;
+    private String type;
+    private int price;
+    private boolean isborrowed;
+
+    public Book(String bookname, String author, String type, int price) {
+        this.bookname = bookname;
+        this.author = author;
+        this.type = type;
+        this.price = price;
+    }
+
+    public String getBookname() {
+        return bookname;
+    }
+
+    public void setBookname(String bookname) {
+        this.bookname = bookname;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public boolean isIsborrowed() {
+        return isborrowed;
+    }
+
+    public void setIsborrowed(boolean isborrowed) {
+        this.isborrowed = isborrowed;
+    }
+
+    @Override
+    public String toString() {
+        return &quot;Book{&quot; +
+                &quot;bookname='&quot; + bookname + '\'' +
+                &quot;, author='&quot; + author + '\'' +
+                &quot;, type='&quot; + type + '\'' +
+                &quot;, price=&quot; + price +
+                &quot;, isborrowed=&quot; + isborrowed +
+                '}';
+    }
+}
+</code></pre>
+<p>除了成员变量和构造方法，还额外加入了<code>各种变量的getter and setter以及toString方法的重写</code>。<br>
+getter和setter很好理解，就是<code>提供一个单一的方法来对特定的变量来进行赋值和取值的作用</code>。</p>
+<pre><code class="language-java">    public static void main(String[] args) {
+        Book book =new Book(&quot;aaa&quot;,&quot;bbb&quot;,&quot;ccc&quot;,12);
+        System.out.println(book.getAuthor());
+        System.out.println(book.isIsborrowed());
+
+    }
+</code></pre>
+<p>这样就读取到了book这个对象的author以及isborrowed。也可以为其重新赋值。</p>
+<pre><code class="language-java">        book.setAuthor(&quot;taylor swift&quot;);
+        System.out.println(book.author);
+</code></pre>
+<p>还有toString方法，其是在<code>Object类</code>里定义的，其返回值类型为String类型，返回类名和它的引用地址。<code>Object类是所有类的父类</code>，所以我们可以在Book类中对这个方法进行<code>重写</code>。重写和重载是有很大的区别的。<br>
+在上文我们提到过重载，其是在<code>一个类中的多态表现</code>，而重写则是在<code>父类与子类之间的多态表现</code>。</p>
+<ul>
+<li>重载的<code>参数类型</code>是<code>必须修改</code>的，因为需要依靠传入参数不同来决定进入哪一个方法。具体可以看上文的重载实例。且<code>返回类型可以被修改</code>。</li>
+<li>而这里提到的重写，<code>参数列表是不可以被修改的</code>，返回类型一般也不可以改，除非是父子类关系。可以看出，重写是<code>重新书写一个方法的内部</code>，而重载是<code>提供多种同名方法的入口</code>。</li>
+</ul>
+<p>想调用toString方法也很简单，直接sout book这个对象即可。</p>
+<pre><code class="language-java">  System.out.println(book);
+</code></pre>
+<p>打印出重写的结果：</p>
+<blockquote>
+<p>Book{bookname='aaa', author='bbb', type='ccc', price=12, isborrowed=false}</p>
+</blockquote>
+<p><em>重写的设计原则</em><br>
+对于一个已经<code>投入使用的类</code>，就不要再对其进行修改了。而是定义一个新的类，来重复其中的<code>共性内容</code>，同时添加新的内容或功能。<br>
+一个很简单的例子，手机是有更新换代的。在这个迭代的过程中势必会有软件硬件上的更新。就像是接打电话的界面，可能在后续的系统更新里，会对这个界面进行一个升级，但是总会有用户不想升级，或者手机型号老旧无法升级，为了顾及到整体的用户体验，就不能去更改原有的<code>相关类</code>，而是选择开发一个新的类来进行重写。</p>
+<p>接下来书写booklist类。<br>
+booklist类的作用就是充当一个书架。并往里面先预放置几本书。</p>
+<pre><code class="language-java">public class Booklist {
+    Book []books =new Book[10]; //就将数量设定为10本
+    int usedsize; //目前存储书籍的本数。
+
+   public Booklist(){
+       books[0]=new Book(&quot;局外人&quot;,&quot;加缪&quot;,&quot;文学&quot;,22);
+       books[1]=new Book(&quot;人间失格&quot;,&quot;太宰治&quot;,&quot;文学&quot;,27);
+       books[2]=new Book(&quot;人生的智慧&quot;,&quot;叔本华&quot;,&quot;文学&quot;,56);
+       this.usedsize=3;
+   }
+
+    public Book[] getBooks() {
+        return books;
+    }
+
+    public void setBooks(Book[] books) {
+        this.books = books;
+    }
+
+    public int getUsedsize() {
+        return usedsize;
+    }
+
+    public void setUsedsize(int usedsize) {
+        this.usedsize = usedsize;
+    }
+
+    
+}
+</code></pre>
+<p>接下来就还有主菜单和operation包了。</p>
+<h1 id="多态与抽象类">🏐多态与抽象类</h1>
+<p>先来了解一下抽象类与多态的相关知识点。<br>
+<em>抽象类</em><br>
+在面向对象的概念里，所有的<code>对象都是通过类来描述</code>的，如果一个类<code>没有足够的信息去描述一个对象</code>，这样的类就称为<code>抽象类</code>。<br>
+例如我们现在定义一个抽象类shape，用来画图形，但是具体画什么我们不清楚，就可以写出如下代码。</p>
+<pre><code class="language-java">abstract class shape{
+    abstract void draw();
+
+    public shape() {
+    }
+}
+class cycle extends shape{
+    public cycle() {
+    }
+    public void draw(){
+        System.out.println(&quot;画一个圆&quot;);
+    }
+
+}
+class rect extends shape{
+    public rect()
+    {
+
+    }
+    public void draw(){
+        System.out.println(&quot;画一个矩形&quot;);
+    }
+}
+ public static void main(String[] args) {
+        cycle a=new cycle();
+        a.draw();
+        rect b= new rect();
+        b.draw();
+    }
+
+</code></pre>
+<p>输出<br>
+画一个圆<br>
+画一个矩形</p>
+<ul>
+<li>shape类由<code>abstract</code>修饰，代表他是一个抽象类。</li>
+<li>cycle和rect通过<code>extends关键字</code>继承了shape类，并对draw方法进行了<code>重写</code>。</li>
+<li>shape作为一个抽象类<code>必须被继承</code>，并且继承后的子类要<code>重写父类的抽象方法</code>。不然子类也会变成抽象类，需要用abstract修饰。</li>
+<li>抽象方法不可以是private修饰，抽象类shape也<code>不可以直接实例化</code>对象。</li>
+<li>抽象方法也不要用final和static修饰，抽象方法是<code>必须被重写</code>的。</li>
+<li>抽象类中可以<code>存在构造方法</code>，让子类创建对象时初始化父类成员变量。</li>
+</ul>
+<p>可以看到，<code>调用同名方法draw，却实现了不同的效果</code>，这就是<code>多态的体现</code>。同一件事发生在不同的对象，就会产生不同的结果。<br>
+多态的使用有如下条件：</p>
+<ul>
+<li>必须处于继承的条件下。</li>
+<li>子类必须对父类方法进行重写。</li>
+<li>通过父类的引用调用重写方法。</li>
+</ul>
+<p>父子类同样可以实现多态，那为何我们要采取抽象类？这不是多此一举吗？</p>
+<blockquote>
+<p>使用抽象类实则是多一层<code>编译器的校验</code>。因为就像shape类，画图的工作不需要shape类，而是其两个子类，cycle和rect。但是如果只是普通的继承，那么可能错误的去<code>调用了shape类</code>，此时编译器不会报错。而当父类shape是抽象类时，在实例化时就会报错。这些语法的存在就是为了<code>“预防出错”</code>。</p>
+</blockquote>
+<p>有了基本的知识储备就可以开始着手主菜单了。新建一个class Main。<br>
+第一步就是先初始化一个书架。</p>
+<pre><code class="language-java">public class Main {
+    Booklist booklist =new Booklist();
+}
+</code></pre>
+<p>第二步就很重要了，要写登录的代码。因为管理员和普通用户的菜单不一样，管理员会比普通用户多一些功能，例如添加图书，删除图书等，所以我们展示的菜单是不一样的。根据才介绍的多态，还需要引入一个比较重要的知识点：<br>
+<em>向上转型和向下转型</em></p>
+<pre><code class="language-java"> public static User login(){
+        System.out.println(&quot;输入姓名&quot;);
+        Scanner scanner =new Scanner(System.in);
+        String name=scanner.toString();
+        System.out.println(&quot;你是管理员(1)还是用户(0)&quot;);
+        int choice =scanner.nextInt();
+        if(choice==1)
+            return new Adminuser(name);
+        else
+            return new Regularuser(name);
+
+    }
+</code></pre>
+<p>login方法的返回类型是User，是return的adminuser与regularuser的<code>父类</code>，<code>子类转为父类</code>，这里就实现了一个<code>向上转型</code>。这样就很方便的使用一个方法就可以return两种不同的类型（但只会返回一个，只是有两种选择）。那么此时就可以在adminuser与regularuser两个类中放入不同的菜单来进行调用了。这里要介绍动态绑定的知识点。<br>
+<em>动态绑定</em></p>
+<blockquote>
+<p>动态绑定是指在执行期间（非编译期）判断所引用对象的实际类型，根据其<code>实际的类型</code>调用其相应的方法。</p>
+</blockquote>
+<p>也就是说，虽然adminuser与regularuser中的一个被向上转型成为了user类型，但实际调用的仍然是子类型，所以在调用同名方法时会<code>优先调用子类的方法</code>。所以往子类里添加相应的管理菜单即可。</p>
+<p>向下转型则是父类向子类进行转换，因为当子类转换到父类后，就不可以在使用子类的特有方法了。如果想要<code>调用子类的特有方法</code>，就需要完成<code>向下转型</code>，将父类引用重<code>新还原</code>为子类对象。</p>
+<pre><code class="language-java">Adminuser user1=(Adminuser)user;
+</code></pre>
+<p>这样就完成了向下的转型，此时user1就可以使用adminuser类里的特有方法了。<br>
+往两个类中添加菜单：<br>
+管理员类：</p>
+<pre><code class="language-java">public void menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+        System.out.println(&quot;4.添加图书&quot;);
+        System.out.println(&quot;5.删除图书&quot;);
+    }
+</code></pre>
+<p>普通用户类</p>
+<pre><code class="language-java"> public void menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+
+    }
+</code></pre>
+<p>此时还要记得将<code>menu方法添加到user类</code>中，才能正常的在子类里调用。<br>
+根据抽象类的知识，就可以将user类改为一个抽象类。</p>
+<pre><code class="language-java">public abstract class User {
+     String name;
+    public User(){
+    }
+    public abstract void menu();
+    public User(String name) {
+        this.name = name;
+        }
+        }
+</code></pre>
+<p>完善menu方法</p>
+<pre><code class="language-java"> public int menu(){
+        System.out.println(&quot;欢迎你！&quot;+name);
+        System.out.println(&quot;0.退出系统&quot;);
+        System.out.println(&quot;1.借阅图书&quot;);
+        System.out.println(&quot;2.归还图书&quot;);
+        System.out.println(&quot;3.查找图书&quot;);
+        System.out.println(&quot;4.添加图书&quot;);
+        System.out.println(&quot;5.删除图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        int choice =scanner.nextInt();
+        return choice;
+
+    }
+</code></pre>
+<p>记得user类和regularuser类也要进行更改！<br>
+在main类中完善代码：</p>
+<pre><code class="language-java"> public static void main(String[] args) {
+        Booklist booklist =new Booklist();
+
+        User user=login();
+        while(true) {
+            int choice = user.menu();
+        }
+    }
+</code></pre>
+<p>这样就基本完成了图书管理系统的结构。剩下的就是operation包了。</p>
+<h1 id="接口">🎱接口</h1>
+<p>operation包里放的就是上述的menu方法中的功能了。通常在书写功能时，会用到<code>接口</code>的思想。</p>
+<blockquote>
+<p>接口就是公共的行为规范标准，在java中，接口可以理解为<code>多个类</code>的公共<code>规范</code>，是一种引用数据类型。</p>
+</blockquote>
+<p>接口的定义规则如下：</p>
+<pre><code class="language-java">public interface 接口名{
+  //放抽象方法。
+}
+</code></pre>
+<ul>
+<li>接口中的成员变量默认是由<code>public static final</code>来修饰。</li>
+<li>接口中的方法默认是<code>public abstract</code>修饰。</li>
+<li>接口不可以直接使用或者实例化，而是用一个<code>实现类</code>来实现接口。</li>
+<li>子类父类是extends实现关系，而接口与类之间则是<code>implements</code>实现关系。</li>
+<li>接口中<code>不能</code>含有静态方法和构造方法。</li>
+</ul>
+<p>简单的说，就是由一个接口来规范功能的书写。<br>
+如下书写了一个简单的接口，只包含一个方法work。</p>
+<pre><code class="language-java">public interface operation {
+    void work(Booklist booklist);
+}
+</code></pre>
+<blockquote>
+<p>这个接口可以被<code>多个类</code>共同使用，同时<code>一个类</code>可以实现<code>多个接口</code>。这就是接口与继承的区别，虽然java中不支持多继承，但却支持实现多接口。</p>
+</blockquote>
+<p>例如此时我们再书写一个接口。</p>
+<pre><code class="language-java">public interface exit {
+    void exitprogress(Booklist booklist);
+}
+</code></pre>
+<p>这样exit和operation两个接口都可以被一个类接收。这样这个类就可以重写两个接口的方法。<br>
+这也是java中面向对象的常见用法：<code>一个类继承父类，同时实现多个接口</code>。<br>
+使用接口的好处在于<code>忘记类型</code>，只需要去关注某个类是否<code>具有某种能力</code>。<br>
+例如现有接口hunt</p>
+<pre><code class="language-java">public interface hunt {
+    void dowork();
+}
+</code></pre>
+<p>与一个继承于Animal的Snake类，那么可以写出如下代码：</p>
+<pre><code class="language-java">public class Snake extends Animal implements hunt{
+    public Snake(String name) {
+        super(name);
+    }
+    public static void huntanimal(hunt hunt){
+        hunt.dowork();
+    }
+
+    @Override
+    public void dowork() {
+        System.out.println(name+&quot;吃兔子&quot;);
+    }
+
+    public static void main(String[] args) {
+        Snake snake=new Snake(&quot;蛇&quot;);
+        huntanimal(snake);
+    }
+}
+</code></pre>
+<p>在调用方法huntanimal时，就无需考虑到类型的传入，只需要去关心传入对象是否具有<code>相对应的某种能力</code>了。那么自然可以重新建一个tiger类，wolf类，只要是具备hunt能力的我们都可以通过huntanimal这个方法来调用。</p>
+<p>以下摘自一位大牛：</p>
+<blockquote>
+<p>1、重要性：在Java语言中， abstract class 和interface 是支持抽象类定义的两种机制。正是由于这两种机制的存在，才赋予了Java强大的 面向对象能力。<br>
+2、简单、规范性：如果一个项目比较庞大，那么就需要一个能理清所有业务的架构师来定义一些主要的接口，这些接口不仅告诉开发人员你需要实现那些业务，而且也将命名规范限制住了（防止一些开发人员随便命名导致别的程序员无法看明白）。<br>
+3、维护、拓展性：比如你要做一个画板程序，其中里面有一个面板类，主要负责绘画功能，然后你就这样定义了这个类。  可是在不久将来，你突然发现这个类满足不了你了，然后你又要重新设计这个类，更糟糕是你可能要放弃这个类，那么其他地方可能有引用他，这样修改起来很麻烦。   如果你一开始定义一个接口，把绘制功能放在接口里，然后定义类时实现这个接口，然后你只要用这个接口去引用实现它的类就行了，以后要换的话只不过是引用另一个类而已，这样就达到维护、拓展的方便性。<br>
+4、安全、严密性：接口是实现软件松耦合的重要手段，它描叙了系统对外的所有服务，而不涉及任何具体的实现细节。这样就比较安全、严密一些（一般软件服务商考虑的比较多）。</p>
+</blockquote>
+<p>先实现查找图书类。<br>
+往booklist里新添加了一个方法getpos，返回i下标的book类。</p>
+<pre><code class="language-java">  public Book getPos(int i){
+       return books[i];
+    }
+</code></pre>
+<p>实现查找图书的方法work。</p>
+<pre><code class="language-java">public class findbook implements operation {
+    public  void work(Booklist booklist) {
+        System.out.println(&quot;请输入需要查找的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize=booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+                System.out.println(&quot;找到了&quot;);
+                System.out.println(&quot;book&quot;);
+                return;
+            }
+        }
+        System.out.println(&quot;没找到&quot;);
+
+    }
+}
+</code></pre>
+<p>接下来是添加图书功能。<br>
+先修改booklist里的setbook方法(之前是使用idea自动生成的，但和我们想要的功能有差异，就重写了)</p>
+<pre><code class="language-java"> public void setBooks(Book book,int pos) {
+        books[pos]=book;
+    }
+</code></pre>
+<p>实现添加图书的work方法</p>
+<pre><code class="language-java">public class addbook implements operation{
+    @Override
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要添加的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        System.out.println(&quot;请输入图书作者&quot;);
+        String bookauthor=scanner.nextLine();
+        System.out.println(&quot;请输入图书类型&quot;);
+        String booktype=scanner.nextLine();
+        System.out.println(&quot;请输入图书价格&quot;);
+        int bookprice=scanner.nextInt();
+        Book book =new Book(bookname,bookauthor,booktype,bookprice);
+        int currentsize=booklist.getUsedsize();
+        booklist.setBooks(book,currentsize);
+        booklist.setUsedsize(currentsize+1);
+
+    }
+}
+
+</code></pre>
+<p>实现删除的方法</p>
+<pre><code class="language-java">public class deletebook implements operation{
+   @Override
+   public void work(Booklist booklist) {
+       System.out.println(&quot;请输入要删除的图书&quot;);
+       Scanner scanner=new Scanner(System.in);
+       String bookname=scanner.nextLine();
+       int currentsize= booklist.getUsedsize();
+       int index=-1;
+       for (int i = 0; i &lt;currentsize ; i++) {
+           Book book=booklist.getPos(i);
+           if(bookname.equals(book.getBookname())){
+               index=i;
+               break;
+           }
+       }
+       if(index==-1)
+           System.out.println(&quot; 未找到图书&quot;);
+   }
+}
+
+</code></pre>
+<p>借书和归还则写的简单些。只需要将isborrowed进行修改即代表借出与归还两种状态。</p>
+<pre><code class="language-java">//借书，注意要放入两个文件中，一个文件只能有一个public修饰的类。
+public class borrowbook implements operation{
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要借阅的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize= booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+               book.setIsborrowed(true);
+            }
+        }
+        
+    }
+}
+//还书
+public class returnbook implements operati{
+    public void work(Booklist booklist) {
+        System.out.println(&quot;请输入要归还的图书&quot;);
+        Scanner scanner=new Scanner(System.in);
+        String bookname=scanner.nextLine();
+        int currentsize= booklist.getUsedsize();
+        for (int i = 0; i &lt;currentsize ; i++) {
+            Book book=booklist.getPos(i);
+            if(bookname.equals(book.getBookname())){
+                book.setIsborrowed(false);
+            }
+        }
+
+    }
+}
+</code></pre>
+<p>退出系统</p>
+<pre><code class="language-java">public class exitsystem implements  operation{
+    @Override
+    public void work(Booklist booklist) {
+        System.out.println(&quot;退出系统&quot;);
+        System.exit(0);
+    }
+}
+
+</code></pre>
+<p>以上就简单将功能都实现了一遍，可以看到，在实现功能时，getter and setter方法的书写是非常重要的，我们经常会用到单个的成员变量，通过getter and setter来调用是非常方便且具有可读性的。</p>
+<p>整个图书管理系统还差最关键的一步，<code>通过菜单来调用对应的方法</code>。这点我们会用到<code>接口数组</code>的思想。<br>
+简单的说，就是让<code>对象存储自己的操作</code>。虽然操作功能的类型各不相同，但都实现了operation接口，那么就可以让<code>实现了这个接口的类</code>都存到这个数组中去。<br>
+先在user类里添加一个接口数组，但不对其进行初始化，因为此时不知道具体大小(<code>两个子类的菜单数是不同的</code>)。</p>
+<pre><code class="language-java"> protected operation[] op;
+ public void dooperation(int choice, Booklist booklist){
+        op[choice].work(booklist);
+    }
+</code></pre>
+<p>而且不可以跳过user类直接在两个子类中一气呵成初始化数组，因为Main类里是user类在调用方法，如果user类<code>不存在</code>调用这个数组的方法，编译器会报错。<br>
+在adminuser和regularuser两个类的<code>构造方法</code>对数组进行初始化。</p>
+<pre><code class="language-java">//在这里就一起给出了
+ public Adminuser(String name) {
+        super(name);
+        this.op=new operation[]{
+                new exitsystem(),
+                new borrowbook(),
+                new returnbook(),
+                new findbook(),
+                new addbook(),
+                new deletebook()
+        };
+    }
+      public Regularuser(String name) {
+        super(name);
+        this.op=new operation[]{
+                new exitsystem(),
+                new borrowbook(),
+                new returnbook(),
+                new findbook()
+        };
+</code></pre>
+<p>接着写在Main类里面的主函数：</p>
+<pre><code class="language-java"> while(true) {
+            int choice = user.menu();
+            user.dooperation(choice,booklist);
+        }
+</code></pre>
+<p>整个简易的图书管理系统就做好了。</p>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-01</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/eJP-l74WC/" title="java">java </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-java-Classes and objects/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-c-pointer/" title="【c】关于指针，你应该知道这些">上一篇</a></li>
+         
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>

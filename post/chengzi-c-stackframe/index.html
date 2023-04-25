@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+ <head>
+     <meta charset="utf-8" />
+  <title>【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？ | chengzi </title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+  <link rel="stylesheet" href="https://taylor516.github.io//styles/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+   <script src="https://cdn.staticfile.org/highlight.js/9.15.9/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+ </head>
+ <body>
+     <div class="sidebar animated fadeInDown">
+   <div class="logo-title">
+    <div class="title">
+     <img src="https://taylor516.github.io//images/avatar.png?v=1682426353249" style="width:127px;" />
+
+     <h3 title=""><a href="/">chengzi</a></h3>
+
+     <div class="description">
+      <p>一个程序员能造成多大的impact，取决于他的代码影响力。</p>
+     </div>
+    </div>
+   </div>
+   <ul class="social-links">
+
+
+    
+
+    <li><a href="https://twitter.com/chengzi516"><i class="fa fa-twitter"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://github.com/chengzi516"><i class="fa fa-github"></i></a></li>
+ 
+    
+
+    
+
+    <li><a href="https://www.youtube.com/channel/UCo10Hfnyjv4iQTLUMPYCFkA"><i class="fa fa-youtube"></i></a></li>
+ 
+    
+
+    
+
+    
+
+    <li><a href="http://wpa.qq.com/msgrd?v=3&amp;uin=772307283&amp;site=qq&amp;menu=yes"><i class="fa fa-qq"></i></a></li>
+ 
+    
+
+    
+
+   </ul>
+   <div class="footer">
+    <div class="by_farbox">
+   今天也要开开心心哦！
+    </div>
+    
+
+    </div>
+   </div>
+  </div>
+  <div class="main">
+     <div class="page-top animated fadeInDown">
+    <div class="nav">
+    
+     <li><a  href="/">home</a></li>
+
+     <li><a  href="/archives">archives</a></li>
+
+     <li><a  href="/tags">tags</a></li>
+
+     <li><a  href="/post/about">about</a></li>
+
+    </div>
+    <div class="information">
+     <div class="back_btn">
+      <li><a class="fa fa-chevron-left" onclick="window.history.go(-1)"> </a></li>
+     </div>
+    </div>
+   </div>
+   <div class="autopagerize_page_element">
+    <div class="content">
+     <div class="post-page">
+      <div class="post animated fadeInDown">
+       <div class="post-title">
+        <h3><a>【c】为啥有时传参要传指针？实参形参到底是个啥？栈帧和他俩到底啥关系？</a></h3>
+       </div>
+       <div class="post-content">
+        <blockquote>
+<p>前言：🎅想必在学习c的过程中，你可能产生过这样的疑惑，为什么在进行传参时总是会选择传入一个<code>指针</code>呢😟？例如你想完成一个add函数，其功能实现为c=a+b，但是在<code>返回值为void</code>的情况下传入a，b两个参数却<code>改变不了c</code>。也许老师给你解释的是<code>形参是实参的拷贝</code>,但你却不是很理解，也许你还遇到过这样的问题：1.局部变量是<code>如何创建</code>的？为何局部变量不初始化会出现<code>随机值</code>？2.在函数调用时<code>参数如何传递</code>？又以何种<code>方式</code>传递？3.函数返回值是如何<code>带回主函数</code>？那么就接着往下看吧。😜</p>
+</blockquote>
+<p>🌈tip：因为不同的编译器带来的反编译效果不同，所以当你们进行测试时会与文章展示有所差异，但不影响理解。推荐vs2013，对整个栈帧创建和销毁的过程展示的更加全面。接下来就以一份以vs2013为平台进行编译的代码进行分析。</p>
+<h1 id="准备">🚗准备</h1>
+<h2 id="栈与栈帧">🚎栈与栈帧</h2>
+<p>栈在数据结构这一课也算是一个典型的例子，有着<code>先进后出</code>的明显特点。栈被当作一种特殊的容器，数据可以被压入栈（push），也可以将压入的数据弹出（pop）。<br>
+在经典的操作系统中，栈总是<code>向下增长（由高地址向低地址）</code>的。<br>
+栈可以认为是CPU寄存器里的<code>某个指针</code>所指向的一片<code>内存区域</code>。在我们常见的i386或者x86-64下，栈顶由被称为 esp 的寄存器（也就是才提到的某个指针）进行定位的。<br>
+<img src="https://th.bing.com/th/id/R.72a4e2235288509e9d67503301f22273?rik=9Hs03RmADC9VBQ&pid=ImgRaw&r=0"><br>
+而栈帧则是被叫做<code>过程活动记录</code>，是编译器用来<code>实现过程/函数调用</code>的一种数据结构。栈帧就是利用EBP寄存器访问局部变量、参数、函数返回地址等的手段。<br>
+总而言之：</p>
+<ol>
+<li>每一次<code>函数调用</code>，都要为本次函数调用<code>开辟空间</code>，就是函数<code>栈帧</code>的空间。</li>
+<li>这块空间的维护是使用了2个寄存器： esp 和 ebp ， ebp 记录的是<code>栈底</code>的地址， esp 记录的是<code>栈顶</code>的地址。</li>
+<li>ebp寄存器又被称为帧指针（Frame Pointer），esp寄存器又被称为栈指针（Stack Pointer）。</li>
+<li>当前程序正在<code>调用哪一个函数</code>，ebp与esp就维护哪一个函数栈帧(这点很重要)。</li>
+</ol>
+<h2 id="寄存器与汇编指令">🚄寄存器与汇编指令</h2>
+<p>以下是后文会用到所以需要了解的知识点。</p>
+<blockquote>
+<p>相关寄存器<br>
+eax：通用寄存器，保留临时数据，常用于返回值<br>
+ebx：通用寄存器，保留临时数据<br>
+ebp：栈底寄存器<br>
+esp：栈顶寄存器<br>
+eip：指令寄存器，保存当前指令的下一条指令的地址</p>
+</blockquote>
+<blockquote>
+<p>相关汇编命令<br>
+mov：数据转移指令<br>
+push：数据入栈，同时esp栈顶寄存器也要发生改变<br>
+pop：数据弹出至指定位置，同时esp栈顶寄存器也要发生改变<br>
+sub：减法命令<br>
+add：加法命令<br>
+call：函数调用，1. 压入返回地址 2. 转入目标函数<br>
+jump：通过修改eip，转入目标函数，进行调用<br>
+ret：恢复返回地址，压入eip，类似pop eip命令</p>
+</blockquote>
+<h1 id="正文开始">🚖正文开始</h1>
+<h2 id="代码示例">🚞代码示例</h2>
+<p>就以简单的add函数来梳理栈帧吧。</p>
+<pre><code class="language-c">int add(int x, int y)
+{
+	int z = 0;
+	z = x + y;
+	return z;
+}
+int main()
+{
+	int a = 3;
+	int b = 5;
+	int ret = 0;
+	ret = add(a, b);
+	printf(&quot;%d&quot;, ret);
+	return 0;
+}
+</code></pre>
+<p>在vs中启动调试，找到<code>调用堆栈</code>的选项。<br>
+<img src="https://imgbed.link/file/17390"><br>
+可以发现，在vs对main函数进行调用前，就已经调用了很多其他的函数了，例如invoke_main。<br>
+<img src="https://imgbed.link/file/17392"><br>
+那么就可以得知，不仅是我们所看到的main或者add，还有许多被调用的函数例如invoke_main，都有<code>自己的栈帧</code>，并且可以通过ebp，esp等指针来对自己的栈帧进行一个维护。<br>
+那么鼠标右击转到<code>反汇编</code>，就可以开始了解栈帧的维护过程了。</p>
+<h2 id="️main的栈帧">✈️main的栈帧</h2>
+<p>我们就从main函数开始讲解。<br>
+这里是vs2022开启反汇编后的截图。<br>
+<img src="https://imgbed.link/file/17393"><br>
+<code>但后续展示的代码来自vs2013</code>，因为2013对此过程的展示更加的清晰明了，有更多的细节。</p>
+<h3 id="栈帧的建立">🚀栈帧的建立</h3>
+<pre><code>//函数栈帧的创建
+00BE1820 push ebp
+00BE1821 mov ebp,esp
+00BE1823 sub esp,0E4h
+00BE1829 push ebx
+00BE182A push esi
+00BE182B push edi
+00BE182C lea edi,[ebp-24h]
+00BE182F mov ecx,9
+00BE1834 mov eax,0CCCCCCCCh
+00BE1839 rep stos dword ptr es:[edi]
+</code></pre>
+<p>第一行，push ebp代表着将ebp寄存器的值进行<code>压栈</code>，并且在此时，ebp中存放的是invoke main函数栈帧的ebp(在调用main前需要调用invoke_main）。<br>
+<img src="https://imgbed.link/file/17394"><br>
+同时，在ebp压栈后，esp会往上移，地址会<code>变小</code>。<br>
+<img src="https://imgbed.link/file/17629"><br>
+第二行，move指令的意思就是将esp的值存到ebp中。那么也就是ebp存储的地址指向了esp，换言之，此时esp与ebp是<code>指向一块空间</code>的。<br>
+第三行，给esp地址进行了一个减法，进而产生了新的esp。注意，地址是<code>由低到高</code>的,也就是esp往上走了，此时，esp与edp之间就是<code>main函数</code>维护的栈帧空间。<br>
+<img src="https://imgbed.link/file/17630"><br>
+接下来进行了三次push，压入三个数据(在这里不作详细解释，与我们讨论的问题无太大关系)。需要注意的是esp是会不断往上移的。</p>
+<pre><code>00BE1829 push ebx //将寄存器ebx的值压栈，esp-4
+00BE182A push esi //将寄存器esi的值压栈，esp-4
+00BE182B push edi //将寄存器edi的值压栈，esp-4
+</code></pre>
+<img src="https://imgbed.link/file/17631">
+接着的几行：
+<pre><code>00BE182C lea edi,[ebp-24h]
+00BE182F mov ecx,9
+00BE1834 mov eax,0CCCCCCCCh
+00BE1839 rep stos dword ptr es:[edi]
+</code></pre>
+<p>其作用为： 先把ebp-24h的地址，放在edi中，再把9放在ecx中，然后将0xCCCCCCCC放在eax中，最后将从edp-0x2h到ebp这一段的内存的<code>每个字节都初始化为0xCC</code>。<br>
+也可以换成如下的伪代码：</p>
+<pre><code class="language-c">edi = ebp-0x24;
+ecx = 9;
+eax = 0xCCCCCCCC;
+for(; ecx = 0; --ecx,edi+=4)
+{
+*(int*)edi = eax;
+}
+</code></pre>
+<img src="https://imgbed.link/file/17632">
+其实，这里就解释了为啥我们在编写程序时总是会出现类似’烫‘的乱字符。
+因为main函数在进行调用时，在栈区开辟的空间的其中`每一个字节`都被初始化为0xCC，而arr数组如果是一个未初始化的数组，恰好就是在这块空间上创建的，0xCCCC（两个连续排列的0xCC）的汉字编码就是“烫”，所以0xCCCC被当作文本就是“烫”。
+<p>到这里mian函数的栈帧建立也就基本完毕。</p>
+<h3 id="进入mian函数">🚊进入mian函数</h3>
+<pre><code>int a = 3;
+00BE183B mov dword ptr [ebp-8],3 //将3存储到ebp-8的地址处，ebp-8的位置其实就
+是a变量
+int b = 5;
+00BE1842 mov dword ptr [ebp-14h],5 //将5存储到ebp-14h的地址处，ebp-14h的位置
+其实是b变量
+int ret = 0;
+00BE1849 mov dword ptr [ebp-20h],0 //将0存储到ebp-20h的地址处，ebp-20h的位
+置其实是ret变量
+</code></pre>
+<img src="https://imgbed.link/file/17633">
+那么到此时，就完成了局部变量的`创建与初始化`了。并且，局部变量的创建就在局部变量的栈帧里。此时的a，b，ret就是实参。
+<h2 id="调用add函数">🚔调用add函数</h2>
+<p>再往下走就需要调用add函数了。</p>
+<pre><code>//调用Add函数
+ret = Add(a, b);
+//调用Add函数时的传参
+//其实传参就是把参数push到栈帧空间中，这里就是函数传参
+00BE1850 mov eax,dword ptr [ebp-14h] //传递b，将ebp-14h处放的5放在eax寄存器
+中 00
+BE1853 push eax //将eax的值压栈，esp-4
+00BE1854 mov ecx,dword ptr [ebp-8] //传递a，将ebp-8处放的3放在ecx寄存器中
+00BE1857 push ecx //将ecx的值压栈，esp-4
+</code></pre>
+<p>eax与ecx作为保存临时值的寄存器，分别存放了b与a的值，再将二者进行压栈。<br>
+存储到eax与ecx中的值就是形参。<br>
+<img src="https://imgbed.link/file/17634"></p>
+<pre><code>//跳转调用函数
+00BE1858 call 00BE10B4
+00BE185D add esp,8
+00BE1860 mov dword ptr [ebp-20h],eax
+</code></pre>
+<p>这里要重点理解一下<code>call指令</code>。 call 指令是要执行<code>函数调用</code>逻辑的，在执行call指令之前先会把call指令的<code>下一条指令的地址</code>进行压栈操作，这个操作是为了解决当函数调用结束后要回到call指令的下一条指令的地方，继续往后执行 。<br>
+也就是压入<code>00BE185D</code>这个值。</p>
+<p>接下来正式进入add函数的栈帧。</p>
+<pre><code>int Add(int x, int y)
+{ 
+0BE1760 push ebp //将main函数栈帧的ebp保存,esp-4
+00BE1761 mov ebp,esp //将main函数的esp赋值给新的ebp，ebp现在是Add函数的ebp
+00BE1763 sub esp,0CCh //给esp-0xCC，求出Add函数的esp
+00BE1769 push ebx //将ebx的值压栈,esp-4
+00BE176A push esi //将esi的值压栈,esp-4
+00BE176B push edi //将edi的值压栈,esp-4
+int z = 0;
+00BE176C mov dword ptr [ebp-8],0 //将0放在ebp-8的地址处，其实就是创建z
+z = x + y;
+//接下来计算的是x+y，结果保存到z中
+00BE1773 mov eax,dword ptr [ebp+8] //将ebp+8地址处的数字存储到eax中
+00BE1776 add eax,dword ptr [ebp+0Ch] //将ebp+12地址处的数字加到eax寄存中
+00BE1779 mov dword ptr [ebp-8],eax //将eax的结果保存到ebp-8的地址处，其实
+就是放到z中
+return z;
+00BE177C mov eax,dword ptr [ebp-8] //将ebp-8地址处的值放在eax中，其实就是
+把z的值存储到eax寄存器中，这里是想通过eax寄存器带回计算的结果，做函数的返回值。
+}
+</code></pre>
+<p>建立add栈帧与建立main栈帧几乎一样，只是栈帧的大小不一样而已。</p>
+<pre><code>0BE1760 push ebp //将main函数栈帧的ebp保存,esp-4
+00BE1761 mov ebp,esp //将main函数的esp赋值给新的ebp，ebp现在是Add函数的ebp
+00BE1763 sub esp,0CCh //给esp-0xCC，求出Add函数的esp
+00BE1769 push ebx //将ebx的值压栈,esp-4
+00BE176A push esi //将esi的值压栈,esp-4
+00BE176B push edi //将edi的值压栈,esp-4
+</code></pre>
+<img src="https://imgbed.link/file/17635">
+<p>接下来就是执行add函数的语句。</p>
+<pre><code>int z = 0;
+00BE176C mov dword ptr [ebp-8],0 //将0放在ebp-8的地址处，其实就是创建z
+z = x + y;
+//接下来计算的是x+y，结果保存到z中
+00BE1773 mov eax,dword ptr [ebp+8] //将ebp+8地址处的数字存储到eax中
+00BE1776 add eax,dword ptr [ebp+0Ch] //将ebp+12地址处的数字加到eax寄存中
+00BE1779 mov dword ptr [ebp-8],eax //将eax的结果保存到ebp-8的地址处，其实
+就是放到z中
+return z;
+00BE177C mov eax,dword ptr [ebp-8] //将ebp-8地址处的值放在eax中，其实就是
+把z的值存储到eax寄存器中，这里是想通过eax寄存器带回计算的结果，做函数的返回值。
+</code></pre>
+<p>还是先创建了一个z，然后使用eax先存储了ebp+8的值，也就是ecx的值，再加上eax的值，就完成了两数相加的过程。<br>
+再将这个值放入z中。此时计算就已完成，下一步就是return一个值，将z的值存储到eax寄存器中，通过eax寄存器带回结果。<br>
+💼tip：一般情况下都是通过<code>寄存器</code>来带回返回值的，如果返回对象过大，一般会在<code>主调函数</code>的栈帧中开辟一块空间，然后把这块空间的地址，隐式传递给被调函数，在被调函数中通过地址找到主调函数中预留的空间，将返回值<code>直接保存</code>到主调函数。</p>
+<p>这里也有力的佐证了<code>形参是实参的一份拷贝</code>的说法，所以改变形参是无法改变实参的哦。想要对值进行改变，要不就进行return，要不然就采用指针的形式，传入想要改变的值的地址。</p>
+<h2 id="栈帧销毁">👩‍👧‍👧栈帧销毁</h2>
+<pre><code>00BE177F pop edi //在栈顶弹出一个值，存放到edi中，esp+4
+00BE1780 pop esi //在栈顶弹出一个值，存放到esi中，esp+4
+00BE1781 pop ebx //在栈顶弹出一个值，存放到ebx中，esp+4
+00BE1782 mov esp,ebp //再将Add函数的ebp的值赋值给esp，相当于回收了Add函数的栈
+帧空间
+00BE1784 pop ebp //弹出栈顶的值存放到ebp，栈顶此时的值恰好就是main函数的ebp，
+esp+4，此时恢复了main函数的栈帧维护，esp指向main函数栈帧的栈顶，ebp指向了main函数栈帧的栈
+底。
+00BE1785 ret //ret指令的执行，首先是从栈顶弹出一个值，此时栈顶的值就是call指
+令下一条指令的地址，此时esp+4，然后直接跳转到call指令下一条指令的地址处，继续往下执行。
+</code></pre>
+<p>这里需要关注到第四行，将<code>当前的esp指向了ebp</code>，也就说明此时add的栈帧被回收掉了。此时的栈顶不正好就是main的ebp吗？<br>
+<img src="https://imgbed.link/file/17636"><br>
+此时pop ebp就代表将栈顶的值传给ebp，也就是说明ebp重新指向了<code>维护main这块栈帧空间的ebp</code>。<br>
+esp+4,向下移一格。<br>
+此时esp与ebp之间的空间不就是之前main函数的栈帧与一个单独的指令地址吗？<br>
+接下来执行ret，从栈顶弹出值，此时的栈顶存放着call指令的下一条指令地址，那么也就顺理成章的执行完add函数，开始接着执行main函数里的其他语句了。</p>
+<h1 id="小结">🥊小结</h1>
+<p>在很多地方我们都会考虑函数的传参形式，所以了解其底层的原理也是很有必要的。何时去传值，何时去传指针，什么时候使用void，什么时候又会考虑return一个int或者char，这些都需要根据实际的情况去写代码。<br>
+例如，传数组进入函数，我们通常会选择传<code>数组的指针</code>，也就是数组的第一个地址，这样可以有效的降低程序对空间的开销，<code>结构体</code>也是一个道理。又比如，我们传的值并不需要改变，只需要作为计算的媒介，那么直接将其拷贝到函数里即可，但要是需要改变的值，就要考虑传指针了。<br>
+在学习到链表那一章节时，如果不考虑增设一个<code>哨兵节点</code>，那么大概率就会遇到<code>链表为空与不为空</code>的情况，此时，就要去考虑是否要设立一个二级指针或者将函数的返回类型进行改变。不然，链表为空时想要对其进行尾插头插，都不可避免的需要改变指针的<code>本身指向</code>，而非改变其值，所以我们要传指针的指针才行。这里可能会有些绕，需要大家自己多画图多理解传参的本质。<br>
+总之请记住，当你想改变一个值，传参时就考虑传他的指针，本质上也就是传递他的<code>地址</code>。或者说对这个值进行一个返回。但我更推荐前者，更灵活也更方便。</p>
+
+       </div>
+       <div class="post-footer">
+        <div class="meta">
+         <div class="info">
+          <i class="fa fa-sun-o"></i>
+          <span class="date">2023-03-01</span>
+          <i class="fa fa-tag"></i>
+          
+          <a class="tag" href="https://taylor516.github.io/tag/oQJc9q4Ck/" title="c/c++">c/c++ </a>
+          
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="share">
+       <div class="evernote">
+        <a class="fa fa-bookmark" href="javascript:(function(){EN_CLIP_HOST='http://www.evernote.com';try{var%20x=document.createElement('SCRIPT');x.type='text/javascript';x.src=EN_CLIP_HOST+'/public/bookmarkClipper.js?'+(new%20Date().getTime()/100000);document.getElementsByTagName('head')[0].appendChild(x);}catch(e){location.href=EN_CLIP_HOST+'/clip.action?url='+encodeURIComponent(location.href)+'&amp;title='+encodeURIComponent(document.title);}})();" ref="nofollow" target="_blank"></a>
+       </div>
+       <div class="weibo">
+        <a class="fa fa-weibo" href="javascript:void((function(s,d,e){try{}catch(e){}var f='http://service.weibo.com/share/share.php?',u=d.location.href,p=['url=',e(u),'&amp;title=',e(d.title),'&amp;appkey=2924220432'].join('');function a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=620,height=450,left=',(s.width-620)/2,',top=',(s.height-450)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent)){setTimeout(a,0)}else{a()}})(screen,document,encodeURIComponent));"></a>
+       </div>
+       <div class="twitter">
+        <a class="fa fa-twitter" href="http://twitter.com/home?status=,https://taylor516.github.io/post/chengzi-c-stackframe/,;"></a>
+       </div>
+      </div>
+      <div class="pagination">
+       <ul class="clearfix">
+
+        <li class="pre pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-c-memory alloction/" title="【c】简述内存中数据如何存储？动态内存该如何分配？">上一篇</a></li>
+         
+        
+        <li class="next pagbuttons"><a class="btn" role="navigation" href="https://taylor516.github.io/post/chengzi-c-pointer/" title=" 【c】关于指针，你应该知道这些">下一篇</a></li>
+        
+       </ul>
+      </div>
+        
+     </div>
+    </div>
+   </div>
+  </div>
+  <script src="https://taylor516.github.io//media/scripts/jquery.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://taylor516.github.io//media/scripts/jquery.appear.js"></script>
+
+
+ </body>
+</html>
